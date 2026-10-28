@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>offer 榜单 · 爬藤流程原型</title>
+
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#EDF0F4; color:#222; display:flex; flex-direction:column; align-items:center; padding:22px 0 40px; }
+  .phone { width:392px; background:#111; border-radius:38px; padding:10px; box-shadow:0 14px 44px rgba(0,0,0,.22); position:relative; }
+  .screen { width:372px; height:764px; border-radius:30px; overflow-y:auto; overflow-x:hidden; background:#fff; position:relative; }
+  .screen::-webkit-scrollbar { width:0; }
+  .page { display:none; animation:fade .25s ease; }
+  .page.active { display:block; }
+  @keyframes fade { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
+
+  .status { font-size:11px; padding:5px 16px 3px; display:flex; justify-content:space-between; color:#000; font-weight:500; }
+  .navbar { padding:8px 12px 10px; display:flex; align-items:center; gap:8px; background:#fff; position:sticky; top:0; z-index:20; }
+  .navbar .back { width:26px; height:26px; display:flex; align-items:center; justify-content:center; color:#333; }
+  .navbar .ttl { font-size:17px; font-weight:600; }
+  .navbar .sp { flex:1; }
+  .season { font-size:10.5px; color:#666; border:1px solid #E5E5E5; border-radius:12px; padding:3px 8px; background:#FAFAFA; white-space:nowrap; }
+  .capsule { border:1px solid #E8E8E8; border-radius:14px; padding:3px 10px; font-size:12px; color:#333; letter-spacing:1px; }
+
+  .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:2px 12px; }
+  .gcard { border-radius:14px; padding:14px 12px; color:#fff; position:relative; overflow:hidden; }
+  .gcard .cap { font-size:10px; opacity:.9; letter-spacing:.5px; }
+  .gcard .big { font-size:21px; font-weight:800; line-height:1.2; margin-top:2px; letter-spacing:.5px; }
+  .gcard .big2 { font-size:16px; font-weight:700; margin-top:1px; }
+  .gcard .sub { font-size:10px; opacity:.9; margin-top:6px; }
+  .g-total { grid-row:span 2; background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 55%,#E86A9B 100%); display:flex; flex-direction:column; justify-content:space-between; padding-bottom:12px; }
+  .g-total .word { font-size:34px; font-weight:900; letter-spacing:2px; opacity:.95; margin-top:4px; }
+  .orb { position:absolute; border-radius:50%; }
+  .g-ug { background:linear-gradient(140deg,#F54B2A 0%,#F98A2B 60%,#FBB03B 100%); }
+  .g-pg { background:linear-gradient(140deg,#12A5D8 0%,#2E6BE8 100%); }
+  .gicon { position:absolute; right:8px; bottom:8px; font-size:30px; opacity:.35; }
+  .gicon2 { position:absolute; right:6px; top:14px; font-size:26px; opacity:.3; }
+
+  .depts { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:10px 12px 0; }
+  .dept { border-radius:10px; height:56px; color:#fff; font-size:10.5px; line-height:1.3; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-weight:600; padding:4px; }
+  .dept.wide { grid-column:span 2; background:linear-gradient(120deg,#1B2A5B,#3B4B8C); }
+  .d1 { background:linear-gradient(150deg,#F06AA0,#E0437A); }
+  .d2 { background:linear-gradient(150deg,#B07CE8,#8A4FD0); }
+  .d3 { background:linear-gradient(150deg,#5BC48A,#2E9E68); }
+  .d4 { background:linear-gradient(150deg,#F5C24B,#E89A2B); }
+  .d5 { background:linear-gradient(150deg,#F0904B,#E06A2B); }
+  .d6 { background:linear-gradient(150deg,#6AA8F0,#3B7BE0); }
+  .d7 { background:linear-gradient(150deg,#5BC8D8,#2E9EB0); }
+
+  .secrow { display:flex; align-items:center; justify-content:space-between; padding:18px 12px 9px; }
+  .secrow .h { font-size:15px; font-weight:700; }
+  .countries { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:0 12px; }
+  .cty { background:#E8355E; color:#fff; border-radius:6px; height:34px; display:flex; align-items:center; justify-content:center; font-size:11.5px; }
+
+  .filters { display:flex; align-items:center; gap:6px; padding:0 12px 10px; border-bottom:1px solid #F2F2F2; }
+  .fbtn { font-size:11.5px; color:#444; border:1px solid #EBEBEB; background:#FAFAFA; border-radius:5px; padding:5px 9px; display:flex; align-items:center; gap:4px; }
+  .freset { font-size:11.5px; color:#888; margin-left:auto; }
+  .fsearch { width:26px; height:26px; border-radius:50%; background:#E8355E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:0 12px; }
+  .ucard { display:flex; align-items:center; gap:9px; background:#fff; border:1px solid #F2F2F2; border-radius:10px; padding:10px; }
+  .ucard .nm { font-size:11px; line-height:1.3; color:#333; }
+  .ucard .of { font-size:11px; color:#E8355E; font-weight:700; margin-top:3px; }
+
+  .rank { display:flex; align-items:center; padding:11px 14px; border-bottom:1px solid #F4F4F4; }
+  .rank .no { width:26px; font-size:13px; color:#BBB; font-weight:600; font-style:italic; }
+  .rlogo { width:34px; height:34px; border-radius:50%; background:#fff; border:1px solid #EDEDED; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex:0 0 34px; }
+  .rname { flex:1; font-size:12.5px; margin-left:10px; line-height:1.35; color:#333; }
+  .rname .rk { display:block; font-size:9px; color:#AAA; font-weight:400; margin-top:2px; letter-spacing:.3px; }
+  .ucard .rk { font-size:9px; color:#AAA; margin-top:1px; }
+  .rside { text-align:right; }
+  .rside .k { font-size:9px; color:#BBB; }
+  .rside .v { font-size:19px; font-weight:800; color:#E8355E; line-height:1.1; }
+
+  .bk-hero { background:linear-gradient(150deg,#F54B2A 0%,#F98A2B 100%); color:#fff; padding:26px 16px 30px; position:relative; overflow:hidden; }
+  .bk-hero .sm { font-size:12px; opacity:.95; letter-spacing:1px; }
+  .bk-hero .lg { font-size:30px; font-weight:800; margin-top:6px; letter-spacing:1px; }
+  .bk-sum { display:flex; background:#fff; margin:-16px 12px 0; border-radius:14px; padding:14px 8px; box-shadow:0 6px 18px rgba(0,0,0,.08); position:relative; z-index:2; }
+  .bk-sum .it { flex:1; text-align:center; }
+  .bk-sum .it + .it { border-left:1px solid #F4F4F4; }
+  .bk-sum .v { font-size:21px; font-weight:800; color:#E8355E; }
+  .bk-sum .v small { font-size:11px; }
+  .bk-sum .k { font-size:10px; color:#999; margin-top:4px; }
+  .meta { font-size:9.5px; color:#AAA; padding:9px 14px 4px; }
+
+  .ivy { margin:10px 12px 0; background:linear-gradient(120deg,#6C2BD9 0%,#B32DA8 100%); border-radius:14px; padding:15px 14px; color:#fff; display:flex; align-items:center; gap:10px; position:relative; overflow:hidden; }
+  .ivy .h { font-size:16px; font-weight:800; }
+  .ivy .s { font-size:10.5px; opacity:.88; margin-top:4px; }
+  .ivy .go { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:11px; }
+
+  .stat-row { display:flex; gap:7px; margin-top:16px; }
+  .stat { flex:1; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3); border-radius:10px; padding:9px 4px; text-align:center; }
+  .stat .num { font-size:21px; font-weight:800; line-height:1; }
+  .stat .u { font-size:10px; opacity:.9; }
+  .stat .lb { font-size:10.5px; opacity:.92; margin-top:5px; }
+  .stat.on { background:#fff; color:#B32DA8; border-color:#fff; }
+
+  .tabs { display:flex; background:#fff; padding:0 12px; border-bottom:1px solid #F2F2F2; position:sticky; top:40px; z-index:15; }
+  .tab { flex:1; text-align:center; padding:11px 4px; font-size:12.5px; color:#777; border-bottom:2px solid transparent; }
+  .tab.on { color:#E8355E; font-weight:700; border-bottom-color:#E8355E; }
+  .tier-h { display:flex; align-items:baseline; justify-content:space-between; padding:16px 14px 8px; }
+  .tier-h .n { font-size:13.5px; font-weight:700; }
+  .tier-h .n span { font-size:10px; color:#AAA; font-weight:400; margin-left:5px; }
+  .tier-h .c { font-size:13px; color:#E8355E; font-weight:700; }
+  .pool-h { display:flex; align-items:baseline; justify-content:space-between; padding:22px 14px 0; }
+  .pool-h .n { font-size:15.5px; font-weight:800; letter-spacing:.5px; }
+  .pool-h .c { font-size:11.5px; color:#B32DA8; font-weight:700; }
+  .pool-h .pmid { display:none; }
+  .rank-tip { font-size:10.5px; color:#E8355E; padding:4px 14px 0; font-weight:400; }
+  .ivy-note { font-size:11px; color:#888; padding:14px 14px 0; line-height:1.6; }
+  .seg { display:flex; background:#F5F5F7; border-radius:10px; margin:12px 14px 0; padding:3px; }
+  .seg .sg { flex:1; text-align:center; padding:9px 0; font-size:13px; color:#666; border-radius:8px; cursor:pointer; }
+  .seg .sg.on { background:#fff; color:#E8355E; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.08); }
+  .chips-row { display:flex; flex-wrap:nowrap; gap:7px; padding:12px 14px 0; }
+  .gchip { border:1px solid #EBEBEB; background:#FAFAFA; border-radius:14px; padding:6px 11px; font-size:11px; color:#555; cursor:pointer; white-space:nowrap; }
+  .gchip.on { background:#E8355E; border-color:#E8355E; color:#fff; font-weight:600; }
+  .fab-col { position:sticky; top:470px; z-index:16; height:0; }
+  .fab { position:absolute; right:10px; width:42px; height:42px; border-radius:10px; background:linear-gradient(150deg,#6C2BD9,#B32DA8); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(108,43,217,.35); cursor:pointer; }
+  .fab .ic { width:20px; height:20px; stroke-width:1.8; }
+  #fabShare { top:52px; }
+  .pmodal { position:absolute; inset:10px; border-radius:30px; background:rgba(0,0,0,.62); z-index:30; display:none; align-items:center; justify-content:center; }
+  .pmodal.show { display:flex; }
+  .pwrap { width:318px; max-height:640px; overflow-y:auto; position:relative; }
+  .pwrap::-webkit-scrollbar { width:0; }
+  .pclose { position:absolute; top:-2px; right:-2px; width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.25); color:#fff; text-align:center; line-height:26px; font-size:13px; cursor:pointer; z-index:2; }
+  .pcard { background:#fff; border-radius:14px; overflow:hidden; }
+  .phead { background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 60%,#E86A9B 100%); color:#fff; padding:16px 14px; }
+  .phead .pt1 { font-size:11px; opacity:.9; letter-spacing:1px; }
+  .phead .pt2 { font-size:19px; font-weight:800; margin-top:4px; }
+  .pfoot { font-size:9px; color:#AAA; text-align:center; padding:10px 12px 12px; }
+  .pbtn { margin:10px 6px 0; background:linear-gradient(90deg,#E8355E,#F0517A); color:#fff; text-align:center; padding:12px; border-radius:24px; font-size:14px; font-weight:700; box-shadow:0 4px 12px rgba(232,53,94,.3); }
+  .toast { position:absolute; left:50%; bottom:120px; transform:translateX(-50%); background:rgba(0,0,0,.78); color:#fff; padding:9px 16px; border-radius:18px; font-size:12px; z-index:40; opacity:0; pointer-events:none; transition:opacity .25s; white-space:nowrap; }
+  .toast.show { opacity:1; }
+  .obig { position:absolute; inset:10px; border-radius:30px; background:rgba(0,0,0,.75); z-index:34; display:none; align-items:center; justify-content:center; flex-direction:column; }
+  .obig.show { display:flex; }
+  .obig .oclose { position:absolute; top:28px; right:32px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.25); color:#fff; text-align:center; line-height:30px; font-size:14px; cursor:pointer; }
+  .obig .ocard-big { width:264px; }
+  .obig .ocard-big .oletter { height:210px; font-size:13px; }
+  .obig .ocard-big .onm { font-size:16px; }
+  .obig .ocard-big .ostu { font-size:13px; }
+  .obig .ocard-big .ometa { font-size:11.5px; }
+  .obig .ocard-big .oqr { width:34px; height:34px; border-radius:5px; }
+  .obig .otip { color:rgba(255,255,255,.85); font-size:11px; margin-top:14px; }
+  #tierBox .rank { cursor:pointer; }
+  .sch-hero { padding:18px 14px 20px; color:#fff; position:relative; overflow:hidden; }
+  .sch-season { display:inline-block; border:1px solid rgba(255,255,255,.55); border-radius:12px; padding:3px 9px; font-size:10px; }
+  .sch-count { display:inline-block; background:#E8355E; border-radius:14px; padding:5px 16px; font-size:17px; font-weight:800; margin-top:10px; }
+  .sch-share { position:absolute; top:16px; right:14px; width:30px; height:30px; border-radius:50%; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .sch-share .ic { width:15px; height:15px; }
+  .sch-logo { width:56px; height:56px; border-radius:50%; background:#fff; color:#333; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:800; margin:12px auto 8px; }
+  .sch-name { text-align:center; font-size:21px; font-weight:800; }
+  .sch-rank { text-align:center; font-size:11px; opacity:.88; margin-top:4px; }
+  .sch-acts { display:flex; gap:8px; margin-top:16px; }
+  .sact { flex:1; text-align:center; background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.3); border-radius:16px; padding:8px 0; font-size:11.5px; cursor:pointer; }
+  .sact.faved { background:#E8355E; border-color:#E8355E; }
+  .wall-filters { display:flex; align-items:center; gap:16px; padding:12px 14px; border-bottom:1px solid #F2F2F2; }
+  .wfbtn { font-size:12.5px; color:#333; display:flex; align-items:center; gap:4px; cursor:pointer; }
+  .wfbtn.chosen { color:#E8355E; font-weight:700; }
+  .wall-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 12px 0; }
+  .ocards { background:linear-gradient(160deg,#E8355E,#C4244C); border-radius:10px; padding:8px; color:#fff; position:relative; overflow:hidden; }
+  .ocards .oletter { background:#fff; border-radius:6px; height:118px; display:flex; align-items:center; justify-content:center; color:#B9B9B9; font-size:9.5px; text-align:center; line-height:1.7; font-weight:600; }
+  .ocards .oyear { position:absolute; right:5px; top:34px; font-size:8.5px; font-weight:800; letter-spacing:1px; opacity:.9; writing-mode:vertical-rl; }
+  .ocards .osfk { position:absolute; top:12px; right:8px; font-size:7.5px; font-weight:800; opacity:.95; }
+  .ocards .onm { font-size:12px; font-weight:800; margin-top:7px; }
+  .ocards .ostu { font-size:10.5px; font-weight:700; margin-top:4px; }
+  .ocards .ometa { font-size:9px; opacity:.92; margin-top:2px; }
+  .ocards .oqr { position:absolute; right:9px; bottom:9px; width:20px; height:20px; background:#fff; border-radius:3px; opacity:.92; }
+  .intro-txt { font-size:12px; color:#555; line-height:1.9; padding:14px; }
+  .poff { padding:9px 12px; border-bottom:1px solid #F2F2F2; font-size:12px; color:#333; }
+  .qf { padding:4px 18px 0; }
+  .qrow { padding:16px 0 4px; }
+  .qrow .ql { font-size:13.5px; color:#333; margin-bottom:6px; }
+  .qi { width:100%; border:none; border-bottom:1px solid #E8E8E8; padding:8px 0; font-size:14px; outline:none; background:transparent; color:#222; }
+  .qi:focus { border-bottom-color:#E8355E; }
+  .qlang { display:flex; gap:14px; margin-top:6px; }
+  .qin { flex:1; min-width:0; border:1px solid #E0E0E0; border-radius:22px; padding:10px 16px; font-size:13px; outline:none; color:#222; background:#fff; }
+  .qin:focus { border-color:#999; }
+  .qbtn { display:block; margin:36px auto 0; width:200px; background:#2B2B2B; color:#fff; text-align:center; padding:13px 0; border-radius:28px; font-size:15px; font-weight:600; cursor:pointer; }
+  .kf-col { position:sticky; top:600px; z-index:16; height:0; }
+  .kf { position:absolute; right:12px; width:46px; height:46px; border-radius:50%; background:#E8355E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; text-align:center; box-shadow:0 4px 10px rgba(232,53,94,.35); cursor:pointer; }
+  .reserved { margin:16px 12px; border:1px dashed #D5D5D5; border-radius:12px; padding:20px 14px; text-align:center; background:#FCFCFC; }
+  .reserved .t { font-size:13px; color:#999; font-weight:600; }
+  .reserved .s { font-size:10.5px; color:#BBB; margin-top:5px; line-height:1.7; }
+  .cta-wrap { position:sticky; bottom:0; z-index:14; padding:14px 14px 16px; background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 26%); }
+  .cta { background:linear-gradient(90deg,#E8355E,#F0517A); color:#fff; text-align:center; padding:14px; border-radius:26px; font-size:14.5px; font-weight:700; box-shadow:0 6px 16px rgba(232,53,94,.3); }
+  .demo { background:#FFF7E6; color:#9A6A00; font-size:10.5px; padding:7px 14px; }
+  .tap { cursor:pointer; transition:transform .12s ease; }
+  .tap:active { transform:scale(.98); }
+  .form-hero { background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 100%); color:#fff; padding:22px 16px 26px; position:relative; overflow:hidden; }
+  .form-hero .t { font-size:22px; font-weight:800; letter-spacing:.5px; }
+  .form-hero .s { font-size:11.5px; opacity:.9; margin-top:9px; line-height:1.65; }
+  .benefit { display:flex; gap:11px; padding:15px 14px 0; }
+  .benefit .ic { width:34px; height:34px; border-radius:9px; background:#FDEEF2; color:#E8355E; display:flex; align-items:center; justify-content:center; font-size:14px; flex:0 0 34px; }
+  .benefit .tt { font-size:13px; font-weight:700; }
+  .benefit .ss { font-size:11px; color:#999; margin-top:3px; line-height:1.55; }
+  .fld { padding:15px 14px 0; }
+  .fld .lb { font-size:12px; font-weight:600; margin-bottom:8px; }
+  .fld .lb i { color:#E8355E; font-style:normal; }
+  .inp { width:100%; border:1px solid #EBEBEB; border-radius:9px; padding:11px 12px; font-size:13px; background:#FAFAFA; outline:none; color:#333; }
+  .inp:focus { border-color:#E8355E; background:#fff; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { border:1px solid #EBEBEB; background:#FAFAFA; border-radius:18px; padding:7px 13px; font-size:12px; color:#555; cursor:pointer; }
+  .chip.on { background:#FDEEF2; border-color:#E8355E; color:#E8355E; font-weight:600; }
+  .ftip { font-size:11px; color:#E8355E; padding:14px 14px 0; min-height:16px; }
+  .submit { margin:8px 14px 0; background:linear-gradient(90deg,#E8355E,#F0517A); color:#fff; text-align:center; padding:14px; border-radius:26px; font-size:15px; font-weight:700; box-shadow:0 6px 16px rgba(232,53,94,.28); }
+  .agree { font-size:10.5px; color:#AAA; padding:12px 20px 28px; text-align:center; line-height:1.6; }
+  .succ { padding:52px 14px 0; text-align:center; }
+  .succ .cir { width:72px; height:72px; border-radius:50%; background:#E8355E; color:#fff; font-size:30px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+  .succ .t { font-size:19px; font-weight:800; }
+  .succ .s { font-size:12.5px; color:#888; margin-top:10px; line-height:1.75; }
+  .card-mini { background:#FAFAFA; border-radius:12px; padding:12px 14px; margin:26px 0 0; text-align:left; }
+  .cm-k { font-size:11px; color:#AAA; margin-bottom:8px; }
+  .cm-r { display:flex; justify-content:space-between; font-size:12px; color:#333; padding:6px 0; border-top:1px solid #F0F0F0; }
+  .cm-r span:first-child { color:#999; }
+  .succ .btn { margin:24px 0 0; border:1px solid #E8355E; color:#E8355E; border-radius:24px; padding:12px; text-align:center; font-size:14px; font-weight:600; }
+  .hint { font-size:11px; color:#9AA3AF; margin-top:14px; }
+  .ic { width:14px; height:14px; display:inline-block; vertical-align:middle; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .ic-sm { width:9px; height:9px; stroke-width:2.6; }
+  .gicon2 .ic, .gicon .ic { width:26px; height:26px; stroke-width:1.6; }
+  .fsearch .ic { width:12px; height:12px; stroke-width:2.4; }
+  .benefit .ic .ic { width:15px; height:15px; stroke-width:1.9; }
+  .succ .cir .ic { width:32px; height:32px; stroke-width:2.8; }
+  .navbar .back .ic { width:12px; height:12px; stroke-width:2.4; }
+  #pf.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
+  .fbody { display:flex; align-items:stretch; flex:1 1 auto; min-height:0; }
+  .fleft { width:40%; flex:0 0 40%; background:#0B0B0B; color:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; padding:0 12px 20px; }
+  .flead { position:absolute; top:0; left:0; width:100%; height:62%; overflow:hidden; }
+  .fbtns { position:relative; z-index:2; }
+  .ftitle { font-size:15px; font-weight:700; margin-bottom:16px; letter-spacing:1px; }
+  .fback { border:1px solid rgba(255,255,255,.6); border-radius:22px; text-align:center; padding:9px; font-size:12px; margin-bottom:10px; cursor:pointer; }
+  .fdone { background:#E8355E; border-radius:22px; text-align:center; padding:10px; font-size:12.5px; font-weight:600; cursor:pointer; }
+  .fright { flex:1; min-width:0; overflow-y:auto; background:#fff; }
+  .fright::-webkit-scrollbar { width:0; }
+  .fhero { height:150px; overflow:hidden; background:#93A9BF; }
+  .fall { background:#E8355E; color:#fff; text-align:center; padding:14px; font-size:13px; font-weight:700; cursor:pointer; }
+  .fall.on { background:#C4244C; box-shadow:inset 0 0 0 2px rgba(255,255,255,.55); }
+  .fopt { display:flex; align-items:center; justify-content:space-between; padding:17px 16px; border-bottom:1px solid #F2F2F2; font-size:13px; color:#333; cursor:pointer; }
+  .fopt .cb { width:15px; height:15px; border:1px solid #C8C8C8; border-radius:2px; flex:0 0 15px; position:relative; }
+  .fopt.on .cb { background:#E8355E; border-color:#E8355E; }
+  .fopt.on .cb::after { content:''; position:absolute; left:4px; top:1px; width:5px; height:8px; border:solid #fff; border-width:0 1.8px 1.8px 0; transform:rotate(43deg); }
+  .fopt.on { color:#E8355E; font-weight:600; }
+  .fempty { padding:17px 16px; font-size:12px; color:#BBB; border-bottom:1px solid #F2F2F2; }
+  .fbtn.chosen { color:#E8355E; font-weight:700; }
+  .fbtn.chosen .lbl { color:#E8355E; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="M9 5 L16 12 L9 19"/></symbol>
+<symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9 L12 16 L18 9 Z" fill="currentColor" stroke="none"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M15.6 15.6 L21 21"/></symbol>
+<symbol id="i-cap" viewBox="0 0 24 24"><path d="M2 9 L12 4 L22 9 L12 14 Z"/><path d="M6 11.5 V16 c0 1.9 3 3.2 6 3.2 s6-1.3 6-3.2 v-4.5"/></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M3 8.5 L12 4.5 L21 8.5 L12 12.5 Z"/><path d="M12 12.5 V17"/><circle cx="12" cy="19" r="2.2"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M4 6.5 H20 M4 12 H20 M4 17.5 H14"/><path d="M15.5 17.5 l2.2 2.2 3.8-4"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.4 l2.7 5.5 6 .9 -4.3 4.2 1 6 -5.4-2.9 -5.4 2.9 1-6 -4.3-4.2 6-.9 Z"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.2" y="5" width="17.6" height="16" rx="2.2"/><path d="M3.2 10 H20.8 M8 3 V7 M16 3 V7"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 L9.5 18 L20 6.5"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11.2 V17 M12 7.4 v1.2"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4 v10 M7.5 10.5 L12 15 L16.5 10.5 M5 19.5 h14"/></symbol>
+<symbol id="i-sh" viewBox="0 0 24 24"><path d="M12 14 V4 M8 7.5 L12 3.5 L16 7.5 M5 12 v8 h14 v-8"/></symbol>
+</defs></svg>
+
+
+<div class="phone">
+  <div class="screen" id="screen">
+
+    <!-- ============ 页面 1：榜单列表 ============ -->
+    <div class="page active" id="p1">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl">榜单列表</div>
+        <div class="sp"></div>
+        <div class="season">26 申请季 <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="grid4">
+        <div class="gcard g-total">
+          <div class="orb" style="width:110px;height:110px;background:rgba(255,255,255,.14);right:-30px;top:40px"></div>
+          <div class="orb" style="width:46px;height:46px;background:rgba(255,255,255,.2);right:26px;bottom:16px"></div>
+          <div>
+            <div class="cap">2026 OFFER</div>
+            <div class="big">总榜单</div>
+          </div>
+          <div class="word">OFFER</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div class="gcard g-ug tap" data-go="p2" style="flex:1">
+            <svg class="ic"><use href="#i-cap"/></svg>
+            <div class="cap">2026 OFFER 录取榜单</div>
+            <div class="big2">本科</div>
+            <div class="sub">本科院校排名</div>
+          </div>
+          <div class="gcard g-pg" style="flex:1">
+            <svg class="ic"><use href="#i-grad"/></svg>
+            <div class="cap">2026 OFFER 录取榜单</div>
+            <div class="big2">研究生</div>
+            <div class="sub">研究生院校排名</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="depts">
+        <div class="dept d1">时尚<br>科系</div>
+        <div class="dept d2">艺术<br>人文</div>
+        <div class="dept wide">交互科技与空间</div>
+        <div class="dept d5">数字艺术<br>与设计</div>
+        <div class="dept d3">影视<br>传媒</div>
+        <div class="dept d4">游戏<br>动画</div>
+        <div class="dept d6">音乐<br>榜单</div>
+      </div>
+
+      <div class="secrow"><div class="h">各国家录取榜单</div><div class="season">26 申请季 <svg class="ic ic-sm"><use href="#i-down"/></svg></div></div>
+      <div class="countries">
+        <div class="cty">美国</div><div class="cty">英国</div><div class="cty">法国</div><div class="cty">日本</div>
+        <div class="cty">意大利</div><div class="cty">澳大利亚</div><div class="cty">中国香港</div><div class="cty">加拿大</div>
+        <div class="cty">新加坡</div><div class="cty">韩国</div><div class="cty">中国澳门</div><div class="cty">北欧</div>
+      </div>
+
+      <div class="secrow"><div class="h">热门排行榜</div><div class="season">26 申请季 <svg class="ic ic-sm"><use href="#i-down"/></svg></div></div>
+      <div class="filters">
+        <div class="fbtn" data-f="country"><span class="lbl">国家</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="fbtn" data-f="dept"><span class="lbl">科系</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="fbtn" data-f="major"><span class="lbl">专业</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="fbtn" data-f="degree"><span class="lbl">学位</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="freset">重置</div>
+        <div class="fsearch"><svg class="ic"><use href="#i-search"/></svg></div>
+      </div>
+      <div id="rankList"></div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ============ 页面 2：本科榜单 ============ -->
+    <div class="page" id="p2">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p1"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">斯芬克国际艺术留学</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="bk-hero">
+        <div class="orb" style="width:140px;height:140px;background:rgba(255,255,255,.13);right:-40px;top:-40px"></div>
+        <div class="orb" style="width:70px;height:70px;background:rgba(255,255,255,.1);right:34px;bottom:-28px"></div>
+        <div class="sm">斯芬克 2026 OFFER</div>
+        <div class="lg">本科 录取榜单</div>
+      </div>
+
+      <div class="bk-sum">
+        <div class="it"><div class="v">5325<small> 枚+</small></div><div class="k">斩获 offer</div></div>
+        <div class="it"><div class="v">2.5<small> 亿</small></div><div class="k">累计奖学金约(人民币)</div></div>
+      </div>
+      <div class="meta">数据截止：2026年10月22日 北京时间 14:41</div>
+
+      <div class="ivy tap" data-go="p3">
+        <div style="flex:1">
+          <div class="h">2026 爬藤战绩</div>
+          <div class="s">美本 TOP30 · 英国 G5 · 港前三</div>
+        </div>
+        <div class="go"><svg class="ic"><use href="#i-right"/></svg></div>
+      </div>
+
+      <div class="secrow"><div class="h">美国院校录取 OFFER 达 <span style="color:#E8355E">1514</span> 枚+</div></div>
+      <div id="usGrid" class="grid2"></div>
+      <div style="height:14px"></div>
+    </div>
+
+    <!-- ============ 页面 3：爬藤专场 ============ -->
+    <div class="page" id="p3">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p2"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">斯芬克国际艺术留学</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="demo"><svg class="ic"><use href="#i-info"/></svg> 以下数字均为示例数据，仅用于原型演示</div>
+
+      <div style="background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 55%,#E86A9B 100%); color:#fff; padding:20px 14px 22px; position:relative; overflow:hidden;">
+        <div class="orb" style="width:120px;height:120px;background:rgba(255,255,255,.12);right:-34px;top:-20px"></div>
+        <div style="font-size:11px;opacity:.9;letter-spacing:1px">2026 OFFER</div>
+        <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">爬藤战绩</div>
+        <div style="font-size:11px;opacity:.88;margin-top:6px">冲刺世界顶尖名校 · 本科录取</div>
+      </div>
+
+      <div class="fab-col">
+        <div class="fab tap" id="fabDl"><svg class="ic"><use href="#i-dl"/></svg></div>
+        <div class="fab tap" id="fabShare"><svg class="ic"><use href="#i-sh"/></svg></div>
+      </div>
+
+      <div class="meta">数据截止 2026年10月22日 北京时间 14:41 · 统计口径：2026 申请季本科录取 offer</div>
+
+      <div class="ivy-note">美本按 US News 名次排列。英国、中国香港、新加坡按 QS 名次排列。</div>
+      <div class="seg" id="regionSeg">
+        <div class="sg on" data-region="us">美本</div>
+        <div class="sg" data-region="ukhk">英国 · 港新</div>
+      </div>
+      <div class="chips-row" id="groupChips"></div>
+
+      <div id="tierBox"></div>
+
+      <div class="reserved">
+        <div class="t">录取案例</div>
+        <div class="s">学员故事 · 作品集 · 录取结果<br>有内容才渲染，无内容时整块不出现</div>
+      </div>
+
+      <div class="cta-wrap"><div class="cta tap" data-go="p4">预约 1v1 选校评估</div></div>
+    </div>
+
+    <!-- ============ 页面 4：1v1 选校评估 ============ -->
+    <div class="page" id="p4">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p3"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">1v1 选校评估</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="form-hero">
+        <div class="orb" style="width:110px;height:110px;background:rgba(255,255,255,.12);right:-30px;top:-24px"></div>
+        <div class="t">1v1 爬藤选校评估</div>
+        <div class="s">资深顾问 1 对 1 沟通，结合你的作品集基础与学术背景，给出可执行的冲藤选校方案</div>
+      </div>
+
+      <div class="benefit">
+        <div class="ic"><svg class="ic"><use href="#i-list"/></svg></div>
+        <div><div class="tt">定制选校清单</div><div class="ss">冲刺、主申、保底三档院校组合，明确每所的目标专业</div></div>
+      </div>
+      <div class="benefit">
+        <div class="ic"><svg class="ic"><use href="#i-star"/></svg></div>
+        <div><div class="tt">录取概率判断</div><div class="ss">参考往年同背景录取数据，判断每所院校的现实机会</div></div>
+      </div>
+      <div class="benefit">
+        <div class="ic"><svg class="ic"><use href="#i-cal"/></svg></div>
+        <div><div class="tt">申请时间规划</div><div class="ss">从作品集到递交，拆到每个月的节点安排</div></div>
+      </div>
+
+      <div class="qf" style="padding-top:6px">
+        <div class="qrow"><div class="ql">姓名：</div><input class="qi" id="fname" placeholder="请输入姓名"></div>
+        <div class="qrow"><div class="ql">手机号：</div><input class="qi" id="fphone" maxlength="11" placeholder="请输入手机号"></div>
+        <div class="qrow"><div class="ql">所在城市：</div><input class="qi" id="fcity" placeholder="请输入所在城市"></div>
+        <div class="qrow"><div class="ql">在读年级：</div><input class="qi" id="fgrade" placeholder="如：高一"></div>
+        <div class="qrow"><div class="ql">申请专业：</div><input class="qi" id="fmajor" placeholder="如：服装设计"></div>
+        <div class="qrow"><div class="ql">计划申请时间：</div><input class="qi" id="ftime" placeholder="如：2026 秋季"></div>
+        <div class="qrow">
+          <div class="ql">语言成绩</div>
+          <div class="qlang">
+            <input class="qin" id="ftof" placeholder="托福分数">
+            <input class="qin" id="fiel" placeholder="雅思分数">
+          </div>
+        </div>
+      </div>
+
+      <div class="ftip" id="ftip"></div>
+      <div class="submit tap" id="submitBtn">提交，等候顾问联系</div>
+      <div class="agree">提交即表示同意斯芬克与你联系，我们不会向第三方披露你的信息</div>
+    </div>
+
+    <!-- ============ 页面 5：提交成功 ============ -->
+    <div class="page" id="p5">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p3"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">提交成功</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="succ">
+        <div class="cir"><svg class="ic"><use href="#i-check"/></svg></div>
+        <div class="t">提交成功</div>
+        <div class="s">顾问将在 24 小时内与你联系<br>请留意来电</div>
+        <div class="card-mini">
+          <div class="cm-k">已提交信息</div>
+          <div class="cm-r"><span>姓名</span><span id="s-name">—</span></div>
+          <div class="cm-r"><span>手机号</span><span id="s-phone">—</span></div>
+          <div class="cm-r"><span>所在城市</span><span id="s-city">未填写</span></div>
+          <div class="cm-r"><span>在读年级</span><span id="s-g">未选择</span></div>
+          <div class="cm-r"><span>申请专业</span><span id="s-m">未选择</span></div>
+          <div class="cm-r"><span>计划申请时间</span><span id="s-t">未选择</span></div>
+          <div class="cm-r"><span>语言成绩</span><span id="s-lang">未填写</span></div>
+        </div>
+        <div class="btn tap" data-go="p3">返回爬藤战绩</div>
+      </div>
+    </div>
+
+
+    <!-- ============ 页面 6：院校详情 ============ -->
+    <div class="page" id="p6">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p3"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">斯芬克国际艺术留学</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div class="demo"><svg class="ic"><use href="#i-info"/></svg> 以下 offer 均为示例数据，仅用于原型演示</div>
+
+      <div class="sch-hero" id="schHero">
+        <div class="sch-season">26申请季 <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+        <div class="sch-share tap" id="schShare"><svg class="ic"><use href="#i-sh"/></svg></div>
+        <div><span class="sch-count" id="schCount">1+</span></div>
+        <div class="sch-logo" id="schLogo">Y</div>
+        <div class="sch-name" id="schName">耶鲁大学</div>
+        <div class="sch-rank" id="schRank">US News 5</div>
+        <div class="sch-acts">
+          <div class="sact tap" id="actFav">♡ 收藏</div>
+          <div class="sact tap" id="actGuide">申请指导</div>
+          <div class="sact tap" id="actPoster">生成院校海报</div>
+        </div>
+      </div>
+
+      <div class="tabs" id="schTabs">
+        <div class="tab" data-st="intro">院校简介</div>
+        <div class="tab on" data-st="wall">offer 墙</div>
+      </div>
+
+      <div id="introBox" style="display:none">
+        <div class="intro-txt" id="schIntro"></div>
+      </div>
+
+      <div id="wallBox">
+        <div class="wall-filters">
+          <div class="wfbtn tap" data-wf="wallDept"><span class="lbl">科系</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+          <div class="wfbtn tap" data-wf="wallDegree"><span class="lbl">学位</span> <svg class="ic ic-sm"><use href="#i-down"/></svg></div>
+          <div class="freset" id="wallReset">重置</div>
+        </div>
+        <div class="wall-grid" id="wallGrid"></div>
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
+    <!-- ============ 页面 7：申请指导（沿用小程序已有样式） ============ -->
+    <div class="page" id="p7">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p6"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:16px">申请指导</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+      <div class="qf">
+        <div class="qrow"><div class="ql">姓名：</div><input class="qi" id="qname" placeholder="请输入姓名"></div>
+        <div class="qrow"><div class="ql">手机号：</div><input class="qi" id="qphone" maxlength="11" placeholder="请输入手机号"></div>
+        <div class="qrow"><div class="ql">所在城市：</div><input class="qi" id="qcity" placeholder="请输入所在城市"></div>
+        <div class="qrow"><div class="ql">在读年级：</div><input class="qi" id="qgrade" placeholder="如：高一"></div>
+        <div class="qrow"><div class="ql">申请专业：</div><input class="qi" id="qmajor" placeholder="如：服装设计"></div>
+        <div class="qrow"><div class="ql">计划申请时间：</div><input class="qi" id="qtime" placeholder="如：2026 秋季"></div>
+        <div class="qrow">
+          <div class="ql">语言成绩</div>
+          <div class="qlang">
+            <input class="qin" id="qtof" placeholder="托福分数">
+            <input class="qin" id="qiel" placeholder="雅思分数">
+          </div>
+        </div>
+        <div class="qbtn tap" id="qSubmit">申 请</div>
+      </div>
+      <div class="kf-col"><div class="kf tap" id="qKefu"><span>在线<br>客服</span></div></div>
+      <div style="height:30px"></div>
+    </div>
+
+    <!-- ============ 页面 8：筛选页 ============ -->
+    <div class="page" id="pf">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar" style="border-bottom:1px solid #F2F2F2">
+        <div class="back tap" id="fNavBack"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" id="fNavTitle">榜单列表</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+        <div class="capsule" style="margin-left:6px;letter-spacing:0">—</div>
+        <div class="capsule" style="margin-left:6px">○</div>
+      </div>
+
+      <div class="fbody">
+        <div class="fleft">
+          <div class="flead">
+            <svg viewBox="0 0 150 420" preserveAspectRatio="xMidYMin meet" style="width:100%;height:100%;display:block">
+              <path d="M-12 84 C-8 46 18 26 48 26 C70 26 82 40 88 54 C94 32 108 22 130 24" fill="none" stroke="#E8355E" stroke-width="6" stroke-linecap="round"/>
+              <circle cx="52" cy="140" r="34" fill="#1E4BE0"/>
+              <circle cx="92" cy="150" r="21" fill="#1E4BE0"/>
+              <path d="M-40 330 C-24 232 34 188 82 188 C136 188 168 246 112 282 C66 312 -22 288 -34 330 Z" fill="#F7A8C8"/>
+            </svg>
+          </div>
+          <div class="fbtns">
+            <div class="ftitle" id="fTitle">国家</div>
+            <div class="fback" id="fBack">返回</div>
+            <div class="fdone" id="fDone">完成</div>
+          </div>
+        </div>
+        <div class="fright" id="fRight"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pmodal" id="pmodal">
+    <div class="pwrap">
+      <div class="pclose tap" id="pClose">✕</div>
+      <div class="pcard">
+        <div class="phead">
+          <div class="pt1">2026 OFFER</div>
+          <div class="pt2">爬藤战绩 · <span id="pSub"></span></div>
+        </div>
+        <div id="pRows"></div>
+        <div class="pfoot">数据截止 2026年10月22日 北京时间 14:41 · 斯芬克国际艺术留学<br>长按识别小程序码查看完整榜单</div>
+      </div>
+      <div class="pbtn tap" id="pSave">保存到相册</div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <div class="obig" id="obig">
+    <div class="oclose tap" id="obigClose">✕</div>
+    <div class="ocard-big" id="obigBody"></div>
+    <div class="otip">真实环境中为 offer 信原图，支持长按保存（原型演示）</div>
+  </div>
+</div>
+
+<div class="hint">榜单列表 →「本科」卡 →「2026 爬藤战绩」→「预约 1v1 选校评估」，可走完整个转化流程</div>
+
+<script>
+// 热门排行榜示例数据，行尾 4 项为筛选标签：[国家, 科系, 专业, 学位]
+const RANK = [
+  ['01','斯坦福大学','1+','#8C1515','S',4,3,'美国','工业交互','交互设计','本科'],
+  ['03','耶鲁大学','2+','#00356B','Y',5,41,'美国','插画纯艺','绘画','本科'],
+  ['04','康奈尔大学','29+','#B31B1B','C',11,16,'美国','空间','建筑设计','研究生'],
+  ['05','哥伦比亚大学','43+','#1D4F91','C',13,34,'美国','视觉传达','平面设计','研究生'],
+  ['06','宾夕法尼亚大学','30+','#011F5B','P',10,11,'美国','工业交互','产品设计','本科'],
+  ['07','约翰霍普金斯大学','41+','#002D72','J',6,26,'美国','视觉传达','新媒体设计','研究生'],
+  ['08','西北大学','8+','#4E2A84','N',6,42,'美国','影视传媒','电影制作','研究生'],
+  ['09','布朗大学','1+','#4E3629','B',13,73,'美国','插画纯艺','当代艺术/实践','本科'],
+  ['10','圣路易斯华盛顿大学','22+','#A51417','W',21,176,'美国','工业交互','工业设计','研究生'],
+  ['11','密歇根安娜堡分校','28+','#00274C','M',21,44,'美国','空间','城市设计','研究生'],
+  ['12','达特茅斯学院','1+','#00693E','D',15,37,'美国','视觉传达','品牌设计','本科'],
+  ['13','南加州大学','130+','#990000','S',27,127,'美国','影视传媒','影视制作','本科'],
+  ['14','威斯康星大学麦迪逊分校','13+','#C5050C','W',29,102,'美国','游戏动画','游戏设计','研究生'],
+  ['15','伦敦大学学院','38+','#002248','U',22,9,'英国','空间','建筑设计','研究生'],
+  ['16','伦敦政经学院','24+','#E30613','L',236,56,'英国','时尚','时尚管理','研究生'],
+  ['17','香港大学','32+','#006F51','H',44,11,'中国香港','游戏动画','娱乐设计','研究生'],
+  ['18','香港中文大学','24+','#7A2E8E','C',53,32,'中国香港','插画纯艺','插画设计','本科']
+];
+
+const US = [
+  ['01','耶鲁大学','1+','#00356B','Y',5,41],
+  ['02','康奈尔大学','7+','#B31B1B','C',11,16],
+  ['03','约翰霍普金斯大学','13+','#002D72','J',6,26],
+  ['04','西北大学','2+','#4E2A84','N',6,42],
+  ['05','圣路易斯华盛顿大学','5+','#A51417','W',21,176],
+  ['06','密歇根安娜堡分校','6+','#00274C','M',21,44],
+  ['07','达特茅斯学院','1+','#00693E','D',15,37],
+  ['08','南加州大学','44+','#990000','S',27,127]
+];
+
+// 爬藤榜单：以下为示例数据（数字均为演示用，非真实统计）
+// 美本按 US News 名次排列（艺术类院校无 US News 综排，附后并标注 QS 艺术与设计学科排名）
+// 英国、中国香港、新加坡按 QS 名次排列，榜单行只显示 QS 排名（USNews 字段保留备用）
+// 行格式：[序号(渲染时自动重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
+var IVY_DATA = {
+  us: { rows: [
+    ['','普林斯顿大学','1+','#E77500','P',1,22,'哈耶普斯麻'],
+    ['','麻省理工学院','1+','#8A8B8C','M',2,1,'哈耶普斯麻'],
+    ['','哈佛大学','1+','#A51C30','H',3,5,'哈耶普斯麻'],
+    ['','斯坦福大学','2+','#8C1515','S',4,3,'哈耶普斯麻'],
+    ['','耶鲁大学','2+','#00356B','Y',5,41,'哈耶普斯麻'],
+    ['','加州理工学院','1+','#FF6C0C','C',6,10,'TOP30综合类'],
+    ['','杜克大学','4+','#012169','D',6,45,'TOP30综合类'],
+    ['','约翰霍普金斯大学','13+','#002D72','J',6,26,'TOP30综合类'],
+    ['','西北大学','2+','#4E2A84','N',6,42,'TOP30综合类'],
+    ['','宾夕法尼亚大学','4+','#011F5B','P',10,11,'TOP30综合类'],
+    ['','康奈尔大学','7+','#B31B1B','C',11,16,'TOP30综合类'],
+    ['','哥伦比亚大学','5+','#1D4F91','C',13,34,'TOP30综合类'],
+    ['','布朗大学','3+','#4E3629','B',13,73,'TOP30综合类'],
+    ['','达特茅斯学院','1+','#00693E','D',15,37,'TOP30综合类'],
+    ['','密歇根安娜堡分校','6+','#00274C','M',21,44,'TOP30综合类'],
+    ['','卡内基梅隆大学','9+','#C41230','C',21,58,'TOP30综合类'],
+    ['','南加州大学','44+','#990000','S',27,127,'TOP30综合类'],
+    ['','纽约大学','8+','#57068C','N',30,43,'TOP30综合类'],
+    ['','帕森斯设计学院','9+','#222222','P','—',2,'TOP30艺术类'],
+    ['','罗德岛设计学院','5+','#3B5BA5','R','—',4,'TOP30艺术类'],
+    ['','芝加哥艺术学院','6+','#B08D3E','A','—',7,'TOP30艺术类'],
+    ['','普瑞特艺术学院','4+','#5F8F4E','P','—',8,'TOP30艺术类']
+  ]},
+  ukhk: { rows: [
+    ['','帝国理工学院','22+','#003E74','I',100,2,'G5'],
+    ['','牛津大学','5+','#002147','O',5,4,'G5'],
+    ['','剑桥大学','7+','#A3C1AD','C',6,6,'G5'],
+    ['','新加坡国立大学','15+','#003D7C','N',33,8,''],
+    ['','伦敦大学学院','38+','#002248','U',22,9,'G5'],
+    ['','香港大学','32+','#006F51','H',44,11,'港八大'],
+    ['','南洋理工大学','9+','#B4273B','T',48,12,''],
+    ['','香港中文大学','24+','#7A2E8E','C',53,32,'港八大'],
+    ['','香港科技大学','18+','#003D7C','S',66,36,'港八大'],
+    ['','伦敦政经学院','24+','#E30613','L',236,56,'G5'],
+    ['','香港城市大学','12+','#00876C','C',110,63,'港八大'],
+    ['','香港理工大学','15+','#A02337','P',120,66,'港八大'],
+    ['','香港浸会大学','6+','#27408B','B',350,254,'港八大'],
+    ['','香港岭南大学','3+','#2E6BE8','L',520,545,'港八大']
+  ]}
+};
+var GROUPS = {
+  us:   ['全部','哈耶普斯麻','TOP30综合类','TOP30艺术类'],
+  ukhk: ['全部','港八大','G5']
+};
+var RGN_LABEL = { us:'美本', ukhk:'英国·港新' };
+var curRegion = 'us';
+var curGroup = '全部';
+var lastIvyRows = [];
+var curSchool = null;
+var lastWallOffers = [];
+
+function paintGroups(){
+  var box = document.getElementById('groupChips');
+  box.innerHTML = GROUPS[curRegion].map(function(g){
+    return '<div class="gchip' + (g === curGroup ? ' on' : '') + '" data-g="' + g + '">' + g + '</div>';
+  }).join('');
+  box.querySelectorAll('.gchip').forEach(function(el){
+    el.addEventListener('click', function(){
+      curGroup = el.dataset.g;
+      paintGroups();
+      renderIvy();
+    });
+  });
+}
+
+function ivyFilteredRows(){
+  var data = IVY_DATA[curRegion];
+  return (data && data.rows) ? data.rows.filter(function(r){
+    return curGroup === '全部' || r[7] === curGroup;
+  }) : [];
+}
+
+function renderIvy(){
+  var label = RGN_LABEL[curRegion] + (curGroup === '全部' ? '' : ' · ' + curGroup);
+  var rows = ivyFilteredRows();
+  var html = '<div class="pool-h"><div class="n">' + label + '</div>' +
+             '<div class="c">' + (rows.length ? '共 ' + rows.length + ' 所' : '') + '</div></div>' +
+             (rows.length ? '<div class="rank-tip">（点击查看院校 offer 详情）</div>' : '');
+  if(rows.length){
+    html += rows.map(function(r, i){
+      var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
+      // 美本显示 US News 排名（艺术类院校无综排，显示 QS 艺术学科排名）；英国·港新显示 QS 排名
+      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], curRegion === 'us' ? 'us' : 'qs');
+    }).join('');
+  } else {
+    html += '<div class="reserved"><div class="t">榜单数据待补充</div>' +
+            '<div class="s">「' + label + '」院校榜单将在此展示<br>字段结构已就绪（含 USNews / QS 排名）</div></div>';
+  }
+  document.getElementById('tierBox').innerHTML = html;
+  lastIvyRows = rows;
+  document.querySelectorAll('#tierBox .rank').forEach(function(el, i){
+    el.addEventListener('click', function(){ openSchool(lastIvyRows[i]); });
+  });
+}
+
+function rankRow(r, mode){
+  var rk;
+  if(mode === 'us'){ rk = (r[5] === '—') ? ('QS 艺术学科 ' + r[6]) : ('US News ' + r[5]); }
+  else if(mode === 'qs'){ rk = 'QS ' + r[6]; }
+  else { rk = 'USNews ' + r[5] + ' · QS ' + r[6]; }
+  return '<div class="rank"><div class="no">' + r[0] + '</div>' +
+    '<div class="rlogo" style="color:' + r[3] + '">' + r[4] + '</div>' +
+    '<div class="rname">' + r[1] + '<span class="rk">' + rk + '</span></div>' +
+    '<div class="rside"><div class="k">offer数</div><div class="v">' + r[2] + '</div></div></div>';
+}
+
+// 按 国家/科系/专业/学位 过滤热门排行榜（多选取并集，各维度取交集）
+function applyFilters(){
+  var rows = RANK.filter(function(r){
+    if(saved.country.length && saved.country.indexOf(r[7]) < 0) return false;
+    if(saved.dept.length && saved.dept.indexOf(r[8]) < 0) return false;
+    if(saved.major.length && saved.major.indexOf(r[9]) < 0) return false;
+    if(saved.degree.length && saved.degree.indexOf(r[10]) < 0) return false;
+    return true;
+  });
+  var box = document.getElementById('rankList');
+  if(rows.length){
+    box.innerHTML = rows.map(function(r, i){
+      var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
+      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]]);
+    }).join('');
+  } else {
+    box.innerHTML = '<div class="reserved"><div class="t">没有符合条件的院校</div><div class="s">换个筛选条件试试，或点「重置」清空</div></div>';
+  }
+}
+document.getElementById('usGrid').innerHTML = US.map(function(r){
+  return '<div class="ucard"><div class="rlogo" style="color:' + r[3] + ';width:30px;height:30px;flex:0 0 30px;font-size:13px">' + r[4] + '</div>' +
+         '<div><div class="nm">' + r[1] + '</div><div class="rk">USNews ' + r[5] + ' · QS ' + r[6] + '</div><div class="of">' + r[2] + ' 枚</div></div></div>';
+}).join('');
+
+function go(id){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.getElementById('screen').scrollTop = 0;
+}
+
+document.querySelectorAll('[data-go]').forEach(function(el){
+  el.addEventListener('click', function(){ go(el.dataset.go); });
+});
+document.querySelectorAll('[data-back]').forEach(function(el){
+  el.addEventListener('click', function(e){ e.stopPropagation(); go(el.dataset.back); });
+});
+document.querySelectorAll('#regionSeg .sg').forEach(function(el){
+  el.addEventListener('click', function(){
+    if(curRegion === el.dataset.region) return;
+    curRegion = el.dataset.region;
+    curGroup = '全部';
+    document.querySelectorAll('#regionSeg .sg').forEach(function(s){ s.classList.toggle('on', s === el); });
+    paintGroups();
+    renderIvy();
+  });
+});
+
+var toastTimer;
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.className = 'toast'; }, 1800);
+}
+
+// 下载：生成当前筛选状态的海报（原型演示为弹层预览 + 模拟保存到相册）
+function openPoster(){
+  var rows = ivyFilteredRows();
+  var label = RGN_LABEL[curRegion] + (curGroup === '全部' ? '' : ' · ' + curGroup);
+  document.getElementById('pSub').textContent = label + ' · 共 ' + rows.length + ' 所';
+  document.getElementById('pRows').innerHTML = rows.slice(0, 8).map(function(r, i){
+    var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
+    return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], curRegion === 'us' ? 'us' : 'qs');
+  }).join('');
+  document.getElementById('pmodal').className = 'pmodal show';
+}
+
+document.getElementById('fabDl').addEventListener('click', openPoster);
+document.getElementById('fabShare').addEventListener('click', function(){
+  toast('已唤起分享面板，可转发给微信好友（原型演示）');
+});
+document.getElementById('pClose').addEventListener('click', function(){
+  document.getElementById('pmodal').className = 'pmodal';
+});
+document.getElementById('pSave').addEventListener('click', function(){
+  toast('海报已保存到相册（原型演示）');
+});
+document.getElementById('obigClose').addEventListener('click', function(){
+  document.getElementById('obig').className = 'obig';
+});
+document.getElementById('obig').addEventListener('click', function(e){
+  if(e.target === this){ this.className = 'obig'; }
+});
+
+// ============ 院校详情页（p6） ============
+var SURNAMES = ['王','李','张','刘','陈','杨','赵','周'];
+function hashCode(s){ var h = 0; for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; } return h; }
+function regionOf(name){
+  if(name.indexOf('香港') > -1) return '中国香港';
+  if(name.indexOf('新加坡') > -1) return '新加坡';
+  if(curRegion === 'us') return '美国';
+  return '英国';
+}
+// 按榜单 offer 数生成示例 offer（1+/2+ 精确对应，大量时展示前 6 条）
+function offersFor(sch){
+  var n = parseInt(sch.count, 10) || 0;
+  var show = Math.min(n, 6);
+  var majors = MAJOR_MAP[sch.dept] || ['设计'];
+  var h = hashCode(sch.name);
+  var arr = [];
+  for(var i = 0; i < show; i++){
+    arr.push({
+      s: SURNAMES[(h + i) % SURNAMES.length],
+      region: sch.region,
+      degree: (h + i) % 2 ? '研究生' : '本科',
+      major: majors[(h + i) % majors.length]
+    });
+  }
+  return arr;
+}
+function offerCard(sch, o){
+  return '<div class="ocards">' +
+    '<div class="osfk">SFK</div><div class="oyear">2026 OFFER</div>' +
+    '<div class="oletter">' + sch.letter + ' UNIVERSITY<br>OFFER LETTER</div>' +
+    '<div class="onm">' + sch.name + '</div>' +
+    '<div class="ostu">' + o.s + '同学</div>' +
+    '<div class="ometa">' + o.region + ' · ' + o.degree + '</div>' +
+    '<div class="ometa">' + o.major + '</div>' +
+    '<div class="oqr"></div>' +
+  '</div>';
+}
+function renderWall(){
+  if(!curSchool) return;
+  var offers = offersFor(curSchool);
+  var fd = saved.wallDept || [], fdeg = saved.wallDegree || [];
+  var list = offers.filter(function(o){
+    if(fd.length){
+      var ok = false;
+      fd.forEach(function(d){ if((MAJOR_MAP[d] || []).indexOf(o.major) > -1) ok = true; });
+      if(!ok) return false;
+    }
+    if(fdeg.length && fdeg.indexOf(o.degree) < 0) return false;
+    return true;
+  });
+  var grid = document.getElementById('wallGrid');
+  if(list.length){
+    grid.innerHTML = list.map(function(o){ return offerCard(curSchool, o); }).join('');
+    lastWallOffers = list;
+    grid.querySelectorAll('.ocards').forEach(function(el, i){
+      el.addEventListener('click', function(){ openOfferBig(lastWallOffers[i]); });
+    });
+  } else {
+    grid.innerHTML = '<div class="reserved" style="grid-column:span 2;margin:12px 0 0"><div class="t">没有符合条件的 offer</div><div class="s">换个筛选条件试试</div></div>';
+  }
+}
+function openOfferBig(o){
+  document.getElementById('obigBody').innerHTML = offerCard(curSchool, o);
+  document.getElementById('obig').className = 'obig show';
+}
+function openSchool(row){
+  curSchool = { name:row[1], count:row[2], color:row[3], letter:row[4], dept:row[7], region:regionOf(row[1]) };
+  var hero = document.getElementById('schHero');
+  hero.style.background = 'linear-gradient(150deg,' + row[3] + ' 0%, #10131C 160%)';
+  document.getElementById('schCount').textContent = row[2];
+  document.getElementById('schLogo').textContent = row[4];
+  document.getElementById('schLogo').style.color = row[3];
+  document.getElementById('schName').textContent = row[1];
+  document.getElementById('schRank').textContent = curRegion === 'us'
+    ? ((row[5] === '—') ? ('QS 艺术学科 ' + row[6]) : ('US News ' + row[5]))
+    : ('QS ' + row[6]);
+  var fav = document.getElementById('actFav');
+  fav.className = 'sact tap'; fav.textContent = '♡ 收藏';
+  saved.wallDept = []; saved.wallDegree = [];
+  document.querySelectorAll('.wfbtn').forEach(function(b){
+    b.querySelector('.lbl').textContent = FLABEL[b.dataset.wf];
+    b.classList.remove('chosen');
+  });
+  document.getElementById('schIntro').textContent = '【示例简介】' + row[1] + '建校于 19 世纪，是世界顶尖的综合类院校，其艺术、设计与建筑相关专业长期位居全球前列。2026 申请季，斯芬克学员共斩获该校 ' + row[2] + ' 枚 offer，覆盖' + row[7] + '等方向。（正式上线前由院校百科数据替换）';
+  renderWall();
+  go('p6');
+}
+
+document.querySelectorAll('#schTabs .tab').forEach(function(t){
+  t.addEventListener('click', function(){
+    document.querySelectorAll('#schTabs .tab').forEach(function(x){ x.classList.toggle('on', x === t); });
+    var wall = t.dataset.st === 'wall';
+    document.getElementById('wallBox').style.display = wall ? '' : 'none';
+    document.getElementById('introBox').style.display = wall ? 'none' : '';
+  });
+});
+document.querySelectorAll('.wfbtn').forEach(function(b){
+  b.addEventListener('click', function(){ openFilter(b.dataset.wf, 'p6'); });
+});
+document.getElementById('wallReset').addEventListener('click', function(){
+  saved.wallDept = []; saved.wallDegree = [];
+  document.querySelectorAll('.wfbtn').forEach(function(b){
+    b.querySelector('.lbl').textContent = FLABEL[b.dataset.wf];
+    b.classList.remove('chosen');
+  });
+  renderWall();
+});
+document.getElementById('schShare').addEventListener('click', function(){
+  toast('已唤起分享面板，可转发院校页（原型演示）');
+});
+document.getElementById('actFav').addEventListener('click', function(){
+  var el = document.getElementById('actFav');
+  var faved = el.className.indexOf('faved') > -1;
+  el.className = 'sact tap' + (faved ? '' : ' faved');
+  el.textContent = faved ? '♡ 收藏' : '♥ 已收藏';
+  toast(faved ? '已取消收藏' : '已收藏该院校');
+});
+document.getElementById('actGuide').addEventListener('click', function(){ go('p7'); });
+
+// ============ 申请指导页（p7，沿用小程序已有样式） ============
+document.getElementById('qKefu').addEventListener('click', function(){
+  toast('在线客服为小程序已有能力（原型占位）');
+});
+document.getElementById('qSubmit').addEventListener('click', function(){  var name = document.getElementById('qname').value.trim();
+  var phone = document.getElementById('qphone').value.trim();
+  if(!name){ toast('请填写姓名'); return; }
+  if(!/^1\d{10}$/.test(phone)){ toast('请填写正确的 11 位手机号'); return; }
+  document.getElementById('s-name').textContent = name;
+  document.getElementById('s-phone').textContent = phone;
+  document.getElementById('s-city').textContent = document.getElementById('qcity').value.trim() || '未填写';
+  document.getElementById('s-g').textContent = document.getElementById('qgrade').value.trim() || '未填写';
+  document.getElementById('s-m').textContent = document.getElementById('qmajor').value.trim() || '未填写';
+  document.getElementById('s-t').textContent = document.getElementById('qtime').value.trim() || '未填写';
+  var lang = [];
+  var tof = document.getElementById('qtof').value.trim();
+  var iel = document.getElementById('qiel').value.trim();
+  if(tof) lang.push('托福 ' + tof);
+  if(iel) lang.push('雅思 ' + iel);
+  document.getElementById('s-lang').textContent = lang.length ? lang.join(' / ') : '未填写';
+  go('p5');
+});
+document.getElementById('actPoster').addEventListener('click', function(){
+  var offers = offersFor(curSchool);
+  document.getElementById('pSub').textContent = curSchool.name + ' · ' + curSchool.count + ' offer';
+  document.getElementById('pRows').innerHTML = offers.length
+    ? offers.map(function(o){ return '<div class="poff">' + o.s + '同学 · ' + o.major + ' · ' + o.degree + ' · ' + o.region + '</div>'; }).join('')
+    : '<div class="poff">暂无 offer 数据</div>';
+  document.getElementById('pmodal').className = 'pmodal show';
+});
+
+document.querySelectorAll('.chip').forEach(function(c){
+  c.addEventListener('click', function(){
+    var g = c.dataset.group;
+    document.querySelectorAll('.chip[data-group="' + g + '"]').forEach(function(x){ x.classList.remove('on'); });
+    c.classList.add('on');
+  });
+});
+
+function picked(g){
+  var el = document.querySelector('.chip[data-group="' + g + '"].on');
+  return el ? el.textContent : '';
+}
+
+document.getElementById('submitBtn').addEventListener('click', function(){
+  var name = document.getElementById('fname').value.trim();
+  var phone = document.getElementById('fphone').value.trim();
+  var tip = document.getElementById('ftip');
+  if(!name){ tip.textContent = '请填写姓名'; return; }
+  if(!/^1\d{10}$/.test(phone)){ tip.textContent = '请填写正确的 11 位手机号'; return; }
+  tip.textContent = '';
+  document.getElementById('s-name').textContent = name;
+  document.getElementById('s-phone').textContent = phone;
+  document.getElementById('s-city').textContent = document.getElementById('fcity').value.trim() || '未填写';
+  document.getElementById('s-g').textContent = document.getElementById('fgrade').value.trim() || '未填写';
+  document.getElementById('s-m').textContent = document.getElementById('fmajor').value.trim() || '未填写';
+  document.getElementById('s-t').textContent = document.getElementById('ftime').value.trim() || '未填写';
+  var lang = [];
+  var tof = document.getElementById('ftof').value.trim();
+  var iel = document.getElementById('fiel').value.trim();
+  if(tof) lang.push('托福 ' + tof);
+  if(iel) lang.push('雅思 ' + iel);
+  document.getElementById('s-lang').textContent = lang.length ? lang.join(' / ') : '未填写';
+  go('p5');
+});
+
+var FOPTS = {
+  country: ['英国','美国','亚洲','欧洲','澳洲','北美','中国香港','日本','韩国','新加坡','意大利','法国','加拿大'],
+  dept: ['工业交互','时尚','插画纯艺','游戏动画','空间','视觉传达','影视传媒','音乐'],
+  degree: ['本科','研究生','预科']
+};
+FOPTS.wallDept = FOPTS.dept;     // offer 墙-科系筛选（复用筛选页）
+FOPTS.wallDegree = FOPTS.degree; // offer 墙-学位筛选
+
+// 科系→专业映射（按斯芬克官方科系体系，音乐暂未配置专业）
+var MAJOR_MAP = {
+  '工业交互': ['工业设计','交互设计','产品设计','人机交互','服务设计','家具设计','配饰设计','穿戴产品设计','用户体验设计','交通工具设计','汽车设计','产品/交互装置','创意编程','信息体验设计','交互媒体实践','情报设计（交叉学科）','综合设计（交叉学科）'],
+  '时尚': ['服装设计','珠宝设计','纺织品设计','面料设计','时尚管理','奢侈品管理','设计管理','时尚买手','时尚传播','时尚造型','戏剧服装设计','时尚摄影','男装设计','女装设计','鞋品设计'],
+  '插画纯艺': ['插画设计','儿童插画','绘画','装置艺术','版画/油画/绘画','雕塑','策展','玻璃艺术','木艺','水墨','陶瓷','摄影/写真','商业摄影','艺术疗愈','艺术管理/教育','当代艺术/实践','前端艺术表现','日本画','艺术史/美术史'],
+  '游戏动画': ['游戏设计','游戏美术','娱乐设计','原画设计','计算机动画','实验动画','角色动画','2D/3D 动画','定格动画','ACG/动漫设计/漫画','特效设计','游戏策划','电脑游戏编程'],
+  '空间': ['建筑设计','景观设计','城市规划','景观管理','景观研究','室内设计','城市设计','环境设计','城市健康发展','可持续城市设计','舞美设计','展示设计'],
+  '视觉传达': ['平面设计','视觉传达设计','视觉艺术','新媒体设计','多媒体设计','数字艺术与媒体设计','治愈设计（交叉学科）','基础设计','包装设计','品牌设计'],
+  '影视传媒': ['电影制作','电影研究','影视制作','制片人','声效','剪辑','摄影','灯光照明设计','导演/剧本','导演/监督','电视电影','电影制作—纪录片','创意制作—电影'],
+  '音乐': []
+};
+var FSUB = { country:{ '亚洲':['中国香港','日本','韩国','新加坡'], '欧洲':['英国','意大利','法国'], '澳洲':['澳大利亚','新西兰'], '北美':['美国','加拿大'] } };
+var FLABEL = { country:'国家', dept:'科系', major:'专业', degree:'学位', wallDept:'科系', wallDegree:'学位' };
+var saved = { country:[], dept:[], major:[], degree:[], wallDept:[], wallDegree:[] };
+var fkey = 'country';
+var draft = [];
+var fbodyFrom = 'p1';
+
+function fHero(){
+  return '<div class="fhero"><svg viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block">' +
+    '<defs><linearGradient id="fsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FA9C4"/><stop offset="1" stop-color="#D8C7A6"/></linearGradient></defs>' +
+    '<rect width="200" height="150" fill="url(#fsky)"/>' +
+    '<circle cx="163" cy="36" r="16" fill="#F6EFDD" opacity=".9"/>' +
+    '<rect x="54" y="40" width="40" height="68" fill="#C9A882"/>' +
+    '<path d="M50 40 L74 18 L98 40 Z" fill="#8B6F55"/>' +
+    '<path d="M62 40 L74 27 L86 40 Z" fill="#7A5F48"/>' +
+    '<rect x="68" y="56" width="12" height="52" fill="#6E5A46"/>' +
+    '<rect x="71" y="24" width="6" height="10" fill="#8B6F55"/>' +
+    '<path d="M0 96 L200 88 V150 H0 Z" fill="#A8937A"/>' +
+    '<path d="M118 104 L200 98 V150 H118 Z" fill="#9A8267"/>' +
+    '<rect x="126" y="88" width="28" height="20" fill="#B89A78"/><path d="M122 88 L140 74 L158 88 Z" fill="#7E634B"/>' +
+    '<rect x="164" y="92" width="24" height="16" fill="#B89A78"/><path d="M161 92 L176 80 L191 92 Z" fill="#7E634B"/>' +
+    '<g fill="#4E6B4A" opacity=".85"><ellipse cx="22" cy="102" rx="16" ry="21"/><ellipse cx="40" cy="108" rx="12" ry="15"/></g>' +
+    '</svg></div>';
+}
+
+function majorOptions(){
+  var sel = saved.dept || [];
+  var list = [];
+  var pools = sel.length ? sel : FOPTS.dept;
+  pools.forEach(function(d){
+    (MAJOR_MAP[d] || []).forEach(function(m){
+      if(list.indexOf(m) < 0) list.push(m);
+    });
+  });
+  return list;
+}
+
+function paintFilter(){
+  document.getElementById('fTitle').textContent = FLABEL[fkey];
+  var nt = document.getElementById('fNavTitle');
+  if(nt) nt.textContent = FLABEL[fkey];
+  var list = (fkey === 'major') ? majorOptions() : FOPTS[fkey];
+  var subs = (fkey === 'country') ? FSUB.country : null;
+  function optHtml(v){
+    return '<div class="fopt' + (draft.indexOf(v) > -1 ? ' on' : '') + '" data-v="' + v + '">' + v + '<span class="cb"></span></div>';
+  }
+  var html = fHero();
+  html += '<div class="fall' + (draft.length ? '' : ' on') + '" data-v="">全部</div>';
+  if(!list.length){
+    html += '<div class="fempty">该科系下暂无可选专业</div>';
+  }
+  list.forEach(function(v){
+    if(subs && subs[v]) return;
+    html += optHtml(v);
+  });
+  if(subs){
+    Object.keys(subs).forEach(function(g){
+      html += optHtml(g);
+    });
+  }
+  var box = document.getElementById('fRight');
+  box.innerHTML = html;
+  box.scrollTop = 0;
+  box.querySelectorAll('.fopt, .fall').forEach(function(el){
+    el.addEventListener('click', function(){
+      var v = el.dataset.v;
+      if(v === ''){
+        draft = [];
+      } else {
+        var i = draft.indexOf(v);
+        if(i > -1){ draft.splice(i, 1); } else { draft.push(v); }
+      }
+      paintFilter();
+    });
+  });
+}
+
+function openFilter(k, from){
+  fkey = k;
+  draft = (saved[k] || []).slice();
+  fbodyFrom = from || 'p1';
+  paintFilter();
+  go('pf');
+}
+
+function filterLabel(k, arr){
+  if(!arr.length) return FLABEL[k];
+  if(arr.length === 1) return arr[0];
+  return arr[0] + ' 等' + arr.length + '项';
+}
+
+function commitFilter(){
+  var prev = (saved[fkey] || []).join('|');
+  saved[fkey] = draft.slice();
+  // 科系变更时清空已选专业（避免出现专业不属于新科系的矛盾组合）
+  if(fkey === 'dept' && saved.dept.join('|') !== prev){
+    saved.major = [];
+    var mb = document.querySelector('.fbtn[data-f="major"]');
+    if(mb){
+      mb.querySelector('.lbl').textContent = FLABEL.major;
+      mb.classList.remove('chosen');
+    }
+  }
+  var btn = document.querySelector('.fbtn[data-f="' + fkey + '"]');
+  if(btn){
+    btn.querySelector('.lbl').textContent = filterLabel(fkey, saved[fkey]);
+    btn.classList.toggle('chosen', saved[fkey].length > 0);
+  }
+  if(fkey === 'wallDept' || fkey === 'wallDegree'){
+    var wb = document.querySelector('.wfbtn[data-wf="' + fkey + '"]');
+    if(wb){
+      wb.querySelector('.lbl').textContent = filterLabel(fkey, saved[fkey]);
+      wb.classList.toggle('chosen', saved[fkey].length > 0);
+    }
+    renderWall();
+  }
+  applyFilters();
+  go(fbodyFrom);
+}
+
+function resetFilters(){
+  saved = { country:[], dept:[], major:[], degree:[], wallDept:[], wallDegree:[] };
+  document.querySelectorAll('.fbtn').forEach(function(b){
+    b.querySelector('.lbl').textContent = FLABEL[b.dataset.f];
+    b.classList.remove('chosen');
+  });
+  applyFilters();
+}
+
+document.querySelectorAll('.fbtn').forEach(function(b){
+  b.addEventListener('click', function(){ openFilter(b.dataset.f, 'p1'); });
+});
+document.querySelector('.freset').addEventListener('click', resetFilters);
+document.getElementById('fDone').addEventListener('click', commitFilter);
+document.getElementById('fBack').addEventListener('click', function(){ go(fbodyFrom); });
+document.getElementById('fNavBack').addEventListener('click', function(){ go(fbodyFrom); });
+
+paintGroups();
+renderIvy();
+applyFilters();
+</script>
+</body>
+</html>
