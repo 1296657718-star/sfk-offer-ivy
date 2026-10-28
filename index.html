@@ -1198,5 +1198,26 @@ paintGroups();
 renderIvy();
 applyFilters();
 </script>
+
+<!-- 版本自检：线上部署时自动跳转到最新版本，避免对方看到浏览器缓存的旧版（本地 file:// 打开无副作用） -->
+<script>
+(function(){
+  if(location.protocol === 'file:') return;
+  if(typeof fetch !== 'function') return;
+  try{
+    fetch('version.txt?t=' + Date.now(), {cache:'no-store'})
+      .then(function(r){ return r.ok ? r.text() : ''; })
+      .then(function(t){
+        t = (t || '').trim();
+        if(!t || !/^[0-9A-Za-z._-]{1,40}$/.test(t)) return;
+        var cur = '';
+        try{ cur = new URLSearchParams(location.search).get('v') || ''; }catch(e){}
+        if(cur === t) return;
+        location.replace(location.pathname + '?v=' + encodeURIComponent(t) + location.hash);
+      })
+      .catch(function(){});
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
