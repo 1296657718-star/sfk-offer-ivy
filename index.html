@@ -15,12 +15,23 @@
   body.hide-notes #noteLayer { display:none; }
   #shapeSvg { position:absolute; top:0; right:0; bottom:0; left:0; z-index:1; width:100%; height:100%; overflow:visible; pointer-events:none; }
   body.noting #shapeSvg { pointer-events:auto; }
-  #noteBox { position:absolute; top:0; right:0; bottom:0; left:0; z-index:2; pointer-events:none; }
+  #imgBox { position:absolute; top:0; right:0; bottom:0; left:0; z-index:2; pointer-events:none; }
+  body.noting #imgBox { pointer-events:auto; }
+  #noteBox { position:absolute; top:0; right:0; bottom:0; left:0; z-index:3; pointer-events:none; }
   body.noting #noteBox { pointer-events:auto; }
   .shape .vis { stroke:#E8355E; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .shape .hit { stroke:transparent; fill:rgba(0,0,0,0); stroke-width:18; cursor:move; }
   .shape .sh-del { cursor:pointer; opacity:0; transition:opacity .12s; }
   .shape:hover .sh-del { opacity:1; }
+  .pimg { position:absolute; box-sizing:border-box; background:#fff; padding:3px; border-radius:6px; box-shadow:0 6px 20px rgba(0,0,0,.22); }
+  .pimg img { display:block; width:100%; height:100%; border-radius:4px; pointer-events:none; user-select:none; -webkit-user-drag:none; }
+  .pimg .pi-hd { position:absolute; left:0; right:0; top:0; height:20px; cursor:move; opacity:0; transition:opacity .12s; background:linear-gradient(180deg,rgba(0,0,0,.4),transparent); border-radius:6px 6px 0 0; display:flex; align-items:center; justify-content:center; font-size:9px; color:#fff; letter-spacing:1px; user-select:none; }
+  .pimg:hover .pi-hd { opacity:1; }
+  .pimg .pi-x { position:absolute; right:6px; top:1px; font-size:12px; color:#fff; cursor:pointer; opacity:0; transition:opacity .12s; text-shadow:0 1px 3px rgba(0,0,0,.7); line-height:20px; padding:0 3px; }
+  .pimg:hover .pi-x { opacity:1; }
+  .pimg .pi-rz { position:absolute; right:1px; bottom:1px; width:15px; height:15px; cursor:se-resize; opacity:0; transition:opacity .12s; background:linear-gradient(135deg,transparent 42%,#E8355E 42%,#E8355E 58%,transparent 58%,transparent 74%,#E8355E 74%); border-radius:0 0 5px 0; }
+  .pimg:hover .pi-rz { opacity:1; }
+  body:not(.noting) .pimg .pi-hd, body:not(.noting) .pimg .pi-x, body:not(.noting) .pimg .pi-rz { display:none; }
   .shape .sh-del circle { fill:#E8355E; }
   .shape .sh-del text { fill:#fff; font-size:10px; text-anchor:middle; dominant-baseline:central; font-family:sans-serif; }
   body:not(.noting) .shape .sh-del { display:none; }
@@ -1251,16 +1262,19 @@ applyFilters();
 })();
 </script>
 
-<!-- 批注图层：便签 + 箭头/方框，点右下角「批注」进入编辑态，自动存本地 -->
+<!-- 批注图层：便签 + 截图 + 箭头/方框，点右下角「批注」进入编辑态，自动存本地 -->
 <div id="noteLayer">
   <svg id="shapeSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="imgBox"></div>
   <div id="noteBox"></div>
 </div>
+<input type="file" id="imgFile" accept="image/*" style="display:none">
 <div class="note-bar">
   <div class="tool-box" id="toolBox" style="display:none">
     <button class="tb on" type="button" data-tool="note">便签</button>
     <button class="tb" type="button" data-tool="arrow">箭头</button>
     <button class="tb" type="button" data-tool="rect">方框</button>
+    <button class="tb" type="button" id="imgPickBtn">▣ 截图</button>
   </div>
   <button class="nb nb-ghost" id="noteToggle" type="button" style="display:none">◎ 隐藏批注</button>
   <button class="nb nb-ghost" id="noteClear" type="button" style="display:none">清空</button>
@@ -1270,18 +1284,23 @@ applyFilters();
 (function(){
   var layer = document.getElementById('noteLayer');
   var noteBox = document.getElementById('noteBox');
+  var imgBox = document.getElementById('imgBox');
   var svg = document.getElementById('shapeSvg');
   var btn = document.getElementById('noteBtn');
   var clearBtn = document.getElementById('noteClear');
   var eyeBtn = document.getElementById('noteToggle');
   var toolBox = document.getElementById('toolBox');
-  if(!layer || !btn || !noteBox || !svg) return;
+  var imgFile = document.getElementById('imgFile');
+  var imgPickBtn = document.getElementById('imgPickBtn');
+  if(!layer || !btn || !noteBox || !svg || !imgBox) return;
 
   var NS = 'http://www.w3.org/2000/svg';
   var K_NOTE = 'sfk_proto_notes_v1';
   var K_SHAPE = 'sfk_proto_shapes_v1';
+  var K_IMG = 'sfk_proto_imgs_v1';
   var notes = load(K_NOTE);
   var shapes = load(K_SHAPE);
+  var imgs = load(K_IMG);
   var editing = false;
   var tool = 'note';
 
@@ -1297,6 +1316,13 @@ applyFilters();
   }
   function saveShapes(){
     try{ localStorage.setItem(K_SHAPE, JSON.stringify(shapes)); }catch(e){}
+    syncBtns();
+  }
+  function saveImgs(){
+    try{ localStorage.setItem(K_IMG, JSON.stringify(imgs)); }
+    catch(e){
+      try{ window.alert('本地存储空间不足，截图可能未能保存。建议先「清空」旧批注。'); }catch(e2){}
+    }
     syncBtns();
   }
   function uid(){ return 'x' + Date.now() + Math.floor(Math.random() * 1000); }
@@ -1360,18 +1386,122 @@ applyFilters();
       if(!editing) return;
       if(has('.nt', e.target) || has('.nx', e.target)) return;
       e.preventDefault();
-      var st = pt(e), ox = n.x, oy = n.y;
+      dragBy(el, n, pt(e));
+    });
+
+    if(!editing) el.style.pointerEvents = 'none';
+    return el;
+  }
+
+  function dragBy(el, o, st){
+    var ox = o.x, oy = o.y;
+    function mv(ev){
+      o.x = Math.max(0, ox + ev.clientX - st.x);
+      o.y = Math.max(0, oy + ev.clientY - st.y);
+      el.style.left = o.x + 'px';
+      el.style.top = o.y + 'px';
+    }
+    function up(){
+      document.removeEventListener('pointermove', mv);
+      document.removeEventListener('pointerup', up);
+      saveNotes();
+    }
+    document.addEventListener('pointermove', mv);
+    document.addEventListener('pointerup', up);
+  }
+
+  layer.addEventListener('click', function(e){
+    if(!editing || tool !== 'note') return;
+    if(has('.note', e.target) || has('.shape', e.target) || has('.pimg', e.target)) return;
+    var p = pt(e);
+    var n = { id: uid(), x: Math.max(0, p.x - 20), y: Math.max(0, p.y - 14), text: '' };
+    notes.push(n);
+    saveNotes();
+    renderNotes();
+    var t = noteBox.querySelector('.note[data-id="' + n.id + '"] .nt');
+    if(t) setTimeout(function(){ try{ t.focus(); }catch(e){} }, 20);
+  });
+
+  /* ---------- 截图 ---------- */
+  function renderImgs(){
+    imgBox.innerHTML = '';
+    imgs.forEach(function(m){ imgBox.appendChild(buildImg(m)); });
+    syncBtns();
+  }
+
+  function buildImg(m){
+    var el = document.createElement('div');
+    el.className = 'pimg';
+    el.setAttribute('data-id', m.id);
+    el.style.left = m.x + 'px';
+    el.style.top = m.y + 'px';
+    el.style.width = m.w + 'px';
+    el.style.height = m.h + 'px';
+
+    var img = document.createElement('img');
+    img.src = m.src;
+    img.alt = '批注截图';
+
+    var hd = document.createElement('div');
+    hd.className = 'pi-hd';
+    hd.textContent = '⠿ 按住拖动';
+
+    var xb = document.createElement('div');
+    xb.className = 'pi-x';
+    xb.textContent = '✕';
+
+    var rz = document.createElement('div');
+    rz.className = 'pi-rz';
+
+    el.appendChild(img);
+    el.appendChild(hd);
+    el.appendChild(xb);
+    el.appendChild(rz);
+
+    xb.addEventListener('click', function(e){
+      e.stopPropagation();
+      imgs = imgs.filter(function(x){ return x.id !== m.id; });
+      saveImgs(); renderImgs();
+    });
+
+    el.addEventListener('pointerdown', function(e){
+      if(!editing) return;
+      if(has('.pi-x', e.target) || has('.pi-rz', e.target)) return;
+      e.preventDefault();
+      var st = pt(e), ox = m.x, oy = m.y;
       function mv(ev){
         var p = pt(ev);
-        n.x = Math.max(0, ox + p.x - st.x);
-        n.y = Math.max(0, oy + p.y - st.y);
-        el.style.left = n.x + 'px';
-        el.style.top = n.y + 'px';
+        m.x = Math.max(0, ox + p.x - st.x);
+        m.y = Math.max(0, oy + p.y - st.y);
+        el.style.left = m.x + 'px';
+        el.style.top = m.y + 'px';
       }
       function up(){
         document.removeEventListener('pointermove', mv);
         document.removeEventListener('pointerup', up);
-        saveNotes();
+        saveImgs();
+      }
+      document.addEventListener('pointermove', mv);
+      document.addEventListener('pointerup', up);
+    });
+
+    rz.addEventListener('pointerdown', function(e){
+      if(!editing) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var st = pt(e), ow = m.w, oh = m.h, k = oh / ow;
+      function mv(ev){
+        var p = pt(ev);
+        var w = Math.max(80, Math.min(1400, ow + p.x - st.x));
+        m.w = Math.round(w);
+        m.h = Math.round(w * k);
+        el.style.width = m.w + 'px';
+        el.style.height = m.h + 'px';
+      }
+      function up(){
+        document.removeEventListener('pointermove', mv);
+        document.removeEventListener('pointerup', up);
+        saveImgs();
       }
       document.addEventListener('pointermove', mv);
       document.addEventListener('pointerup', up);
@@ -1381,16 +1511,76 @@ applyFilters();
     return el;
   }
 
-  layer.addEventListener('click', function(e){
-    if(!editing || tool !== 'note') return;
-    if(has('.note', e.target) || has('.shape', e.target)) return;
-    var p = pt(e);
-    var n = { id: uid(), x: Math.max(0, p.x - 20), y: Math.max(0, p.y - 14), text: '' };
-    notes.push(n);
-    saveNotes();
-    renderNotes();
-    var t = noteBox.querySelector('.note[data-id="' + n.id + '"] .nt');
-    if(t) setTimeout(function(){ try{ t.focus(); }catch(e){} }, 20);
+  function shrink(src, cb){
+    var im = new Image();
+    im.onload = function(){
+      var max = 1000;
+      var w = im.width || 600, h = im.height || 400;
+      var s = Math.min(1, max / Math.max(w, h));
+      try{
+        var c = document.createElement('canvas');
+        c.width = Math.round(w * s);
+        c.height = Math.round(h * s);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        cb(c.toDataURL('image/jpeg', 0.85), c.width, c.height);
+      }catch(e){ cb(src, w, h); }
+    };
+    im.onerror = function(){ cb(src, 0, 0); };
+    im.src = src;
+  }
+
+  function addImage(dataUrl){
+    shrink(dataUrl, function(src, w, h){
+      var dw = 320;
+      var dh = (w && h) ? Math.round(dw * h / w) : 220;
+      var r = layer.getBoundingClientRect();
+      var cx = window.innerWidth / 2 - r.left - dw / 2;
+      var cy = window.innerHeight / 2 - r.top - dh / 2;
+      imgs.push({
+        id: uid(),
+        src: src,
+        x: Math.max(0, Math.round(cx)),
+        y: Math.max(0, Math.round(cy)),
+        w: dw,
+        h: dh
+      });
+      saveImgs();
+      renderImgs();
+    });
+  }
+
+  function readFile(f){
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(ev){ addImage(ev.target.result); };
+    rd.readAsDataURL(f);
+  }
+
+  if(imgPickBtn && imgFile){
+    imgPickBtn.addEventListener('click', function(){
+      if(!editing) setMode(true);
+      try{ imgFile.click(); }catch(e){}
+    });
+    imgFile.addEventListener('change', function(){
+      readFile(this.files && this.files[0]);
+      this.value = '';
+    });
+  }
+
+  document.addEventListener('paste', function(e){
+    var cd = e.clipboardData;
+    if(!cd || !cd.items) return;
+    for(var i = 0; i < cd.items.length; i++){
+      var it = cd.items[i];
+      if(it && it.type && it.type.indexOf('image') === 0){
+        var f = it.getAsFile ? it.getAsFile() : null;
+        if(!f) continue;
+        e.preventDefault();
+        if(!editing) setMode(true);
+        readFile(f);
+        return;
+      }
+    }
   });
 
   /* ---------- 箭头 / 方框 ---------- */
@@ -1482,7 +1672,7 @@ applyFilters();
 
   layer.addEventListener('pointerdown', function(e){
     if(!editing || tool === 'note') return;
-    if(has('.shape', e.target) || has('.note', e.target)) return;
+    if(has('.shape', e.target) || has('.note', e.target) || has('.pimg', e.target)) return;
     e.preventDefault();
     var p = pt(e);
     var s = { id: uid(), type: tool, x1: p.x, y1: p.y, x2: p.x, y2: p.y };
@@ -1511,7 +1701,7 @@ applyFilters();
   function syncBtns(){
     clearBtn.style.display = editing ? '' : 'none';
     toolBox.style.display = editing ? '' : 'none';
-    var any = (notes.length + shapes.length) > 0;
+    var any = (notes.length + shapes.length + imgs.length) > 0;
     eyeBtn.style.display = (!editing && any) ? '' : 'none';
     eyeBtn.textContent = document.body.classList.contains('hide-notes') ? '◉ 显示批注' : '◎ 隐藏批注';
   }
@@ -1520,13 +1710,14 @@ applyFilters();
     editing = v;
     document.body.classList.toggle('noting', v);
     btn.textContent = v ? '✓ 完成' : '✎ 批注';
+    renderImgs();
     renderNotes();
     drawShapes();
   }
 
   function setTool(t){
     tool = t;
-    Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb'), function(b){
+    Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb[data-tool]'), function(b){
       b.classList.toggle('on', b.getAttribute('data-tool') === t);
     });
     document.body.classList.toggle('tool-draw', t !== 'note');
@@ -1534,17 +1725,18 @@ applyFilters();
 
   btn.addEventListener('click', function(){ setMode(!editing); });
 
-  Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb'), function(b){
+  Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb[data-tool]'), function(b){
     b.addEventListener('click', function(){ setTool(b.getAttribute('data-tool')); });
   });
 
   clearBtn.addEventListener('click', function(){
-    if(!notes.length && !shapes.length) return;
-    if(window.confirm('清空全部批注（便签 + 箭头方框）？')){
+    if(!notes.length && !shapes.length && !imgs.length) return;
+    if(window.confirm('清空全部批注（便签 + 截图 + 箭头方框）？')){
       notes = [];
       shapes = [];
-      saveNotes(); saveShapes();
-      renderNotes(); drawShapes();
+      imgs = [];
+      saveNotes(); saveShapes(); saveImgs();
+      renderImgs(); renderNotes(); drawShapes();
     }
   });
 
@@ -1554,6 +1746,7 @@ applyFilters();
   });
 
   setTool('note');
+  renderImgs();
   renderNotes();
   drawShapes();
   setMode(false);
