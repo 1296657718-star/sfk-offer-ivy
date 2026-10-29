@@ -9,15 +9,25 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#EDF0F4; color:#222; display:flex; flex-direction:column; align-items:center; padding:44px 40px 110px; min-height:100vh; box-sizing:border-box; position:relative; }
 
-  /* ===== 批注便签层 ===== */
+  /* ===== 批注层（便签 + 箭头/方框） ===== */
   #noteLayer { position:absolute; top:0; right:0; bottom:0; left:0; z-index:50; pointer-events:none; }
   body.noting #noteLayer { pointer-events:auto; cursor:crosshair; }
   body.hide-notes #noteLayer { display:none; }
-  .note { position:absolute; width:190px; box-sizing:border-box; background:#FFF9C4; border:1px solid #EDE08A; border-radius:8px; padding:15px 10px 10px; box-shadow:0 6px 18px rgba(80,70,20,.18); font-size:12.5px; line-height:1.6; color:#4A4032; }
-  .note .nh { position:absolute; left:0; right:0; top:0; height:13px; border-radius:8px 8px 0 0; cursor:move; background:repeating-linear-gradient(90deg,#F0E4A0 0 4px,transparent 4px 8px); opacity:.6; }
+  #shapeSvg { position:absolute; top:0; right:0; bottom:0; left:0; z-index:1; width:100%; height:100%; overflow:visible; pointer-events:none; }
+  body.noting #shapeSvg { pointer-events:auto; }
+  #noteBox { position:absolute; top:0; right:0; bottom:0; left:0; z-index:2; pointer-events:none; }
+  body.noting #noteBox { pointer-events:auto; }
+  .shape .vis { stroke:#E8355E; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .shape .hit { stroke:transparent; fill:rgba(0,0,0,0); stroke-width:18; cursor:move; }
+  .shape .sh-del { cursor:pointer; }
+  .shape .sh-del circle { fill:#E8355E; }
+  .shape .sh-del text { fill:#fff; font-size:10px; text-anchor:middle; dominant-baseline:central; font-family:sans-serif; }
+  body:not(.noting) .shape .sh-del { display:none; }
+  .note { position:absolute; width:190px; box-sizing:border-box; background:#FFF9C4; border:1px solid #EDE08A; border-radius:8px; padding:18px 10px 10px; box-shadow:0 6px 18px rgba(80,70,20,.18); font-size:12.5px; line-height:1.6; color:#4A4032; }
+  .note .nh { position:absolute; left:0; right:0; top:0; height:17px; border-radius:8px 8px 0 0; cursor:move; background:repeating-linear-gradient(90deg,#F0E4A0 0 4px,transparent 4px 8px); display:flex; align-items:center; justify-content:center; font-size:9px; color:#9C8F55; letter-spacing:1px; user-select:none; }
   .note .nt { outline:none; white-space:pre-wrap; word-break:break-word; min-height:20px; }
   .note .nt:empty:before { content:'写点批注…'; color:#C6BA83; }
-  .note .nx { position:absolute; right:5px; top:0; font-size:11px; color:#B9A96A; cursor:pointer; padding:1px 4px; }
+  .note .nx { position:absolute; right:5px; top:0; font-size:11px; color:#B9A96A; cursor:pointer; padding:0 4px; line-height:17px; }
   body:not(.noting) .note .nx { display:none; }
   body:not(.noting) .note .nh { cursor:default; }
   .note-bar { position:fixed; right:18px; bottom:18px; z-index:60; display:flex; gap:8px; align-items:center; }
@@ -25,6 +35,9 @@
   .nb-main { background:#2B2B2B; color:#fff; }
   body.noting .nb-main { background:#E8355E; }
   .nb-ghost { background:#fff; color:#777; border:1px solid #E3E3E3; font-weight:400; }
+  .tool-box { display:flex; gap:2px; background:#fff; border:1px solid #E6E6E6; border-radius:20px; padding:3px; box-shadow:0 6px 18px rgba(0,0,0,.14); }
+  .tb { border:none; background:transparent; border-radius:16px; padding:6px 12px; font-size:12px; color:#666; cursor:pointer; white-space:nowrap; }
+  .tb.on { background:#E8355E; color:#fff; font-weight:600; }
   .phone { width:392px; background:#111; border-radius:38px; padding:10px; box-shadow:0 14px 44px rgba(0,0,0,.22); position:relative; }
   .screen { width:372px; height:764px; border-radius:30px; overflow-y:auto; overflow-x:hidden; background:#fff; position:relative; }
   .screen::-webkit-scrollbar { width:0; }
@@ -1237,9 +1250,17 @@ applyFilters();
 })();
 </script>
 
-<!-- 批注便签：点右下角「批注」进入编辑态，点画布任意位置写字；可拖动、可删除、自动存本地 -->
-<div id="noteLayer"></div>
+<!-- 批注图层：便签 + 箭头/方框，点右下角「批注」进入编辑态，自动存本地 -->
+<div id="noteLayer">
+  <svg id="shapeSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="noteBox"></div>
+</div>
 <div class="note-bar">
+  <div class="tool-box" id="toolBox" style="display:none">
+    <button class="tb on" type="button" data-tool="note">便签</button>
+    <button class="tb" type="button" data-tool="arrow">箭头</button>
+    <button class="tb" type="button" data-tool="rect">方框</button>
+  </div>
   <button class="nb nb-ghost" id="noteToggle" type="button" style="display:none">◎ 隐藏批注</button>
   <button class="nb nb-ghost" id="noteClear" type="button" style="display:none">清空</button>
   <button class="nb nb-main" id="noteBtn" type="button">✎ 批注</button>
@@ -1247,35 +1268,51 @@ applyFilters();
 <script>
 (function(){
   var layer = document.getElementById('noteLayer');
+  var noteBox = document.getElementById('noteBox');
+  var svg = document.getElementById('shapeSvg');
   var btn = document.getElementById('noteBtn');
   var clearBtn = document.getElementById('noteClear');
   var eyeBtn = document.getElementById('noteToggle');
-  if(!layer || !btn) return;
+  var toolBox = document.getElementById('toolBox');
+  if(!layer || !btn || !noteBox || !svg) return;
 
-  var KEY = 'sfk_proto_notes_v1';
-  var notes = [];
+  var NS = 'http://www.w3.org/2000/svg';
+  var K_NOTE = 'sfk_proto_notes_v1';
+  var K_SHAPE = 'sfk_proto_shapes_v1';
+  var notes = load(K_NOTE);
+  var shapes = load(K_SHAPE);
   var editing = false;
+  var tool = 'note';
 
-  try{ notes = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ notes = []; }
-  if(!(notes instanceof Array)) notes = [];
-
-  function save(){
-    try{ localStorage.setItem(KEY, JSON.stringify(notes)); }catch(e){}
+  function load(k){
+    try{
+      var v = JSON.parse(localStorage.getItem(k) || '[]');
+      return (v instanceof Array) ? v : [];
+    }catch(e){ return []; }
+  }
+  function saveNotes(){
+    try{ localStorage.setItem(K_NOTE, JSON.stringify(notes)); }catch(e){}
     syncBtns();
   }
-
-  function origin(){
+  function saveShapes(){
+    try{ localStorage.setItem(K_SHAPE, JSON.stringify(shapes)); }catch(e){}
+    syncBtns();
+  }
+  function uid(){ return 'x' + Date.now() + Math.floor(Math.random() * 1000); }
+  function pt(e){
     var r = layer.getBoundingClientRect();
-    return { x: r.left + window.pageXOffset, y: r.top + window.pageYOffset };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
+  function has(sel, t){ return !!(t && t.closest && t.closest(sel)); }
 
-  function render(){
-    layer.innerHTML = '';
-    notes.forEach(function(n){ layer.appendChild(build(n)); });
+  /* ---------- 便签 ---------- */
+  function renderNotes(){
+    noteBox.innerHTML = '';
+    notes.forEach(function(n){ noteBox.appendChild(buildNote(n)); });
     syncBtns();
   }
 
-  function build(n){
+  function buildNote(n){
     var el = document.createElement('div');
     el.className = 'note';
     el.setAttribute('data-id', n.id);
@@ -1284,15 +1321,16 @@ applyFilters();
 
     var handle = document.createElement('div');
     handle.className = 'nh';
-
-    var del = document.createElement('div');
-    del.className = 'nx';
-    del.textContent = '✕';
+    handle.textContent = '⠿ 按住拖动';
 
     var txt = document.createElement('div');
     txt.className = 'nt';
     txt.textContent = n.text || '';
     txt.contentEditable = editing ? 'true' : 'false';
+
+    var del = document.createElement('div');
+    del.className = 'nx';
+    del.textContent = '✕';
 
     el.appendChild(handle);
     el.appendChild(txt);
@@ -1301,45 +1339,41 @@ applyFilters();
     del.addEventListener('click', function(e){
       e.stopPropagation();
       notes = notes.filter(function(x){ return x.id !== n.id; });
-      save(); render();
+      saveNotes(); renderNotes();
     });
 
-    txt.addEventListener('input', function(){
-      n.text = txt.textContent;
-      save();
-    });
+    txt.addEventListener('input', function(){ n.text = txt.textContent; saveNotes(); });
 
     txt.addEventListener('blur', function(){
-      var v = (txt.textContent || '').replace(/\s+$/,'');
+      var v = (txt.textContent || '').replace(/\s+$/, '');
       if(!v.trim()){
         notes = notes.filter(function(x){ return x.id !== n.id; });
-        render();
+        renderNotes();
       } else {
         n.text = v;
-        save();
+        saveNotes();
       }
     });
 
-    txt.addEventListener('mousedown', function(e){ if(editing) e.stopPropagation(); });
-
-    handle.addEventListener('pointerdown', function(e){
+    el.addEventListener('pointerdown', function(e){
       if(!editing) return;
+      if(has('.nt', e.target) || has('.nx', e.target)) return;
       e.preventDefault();
-      var sx = e.clientX, sy = e.clientY, ox = n.x, oy = n.y;
-      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+      var st = pt(e), ox = n.x, oy = n.y;
       function mv(ev){
-        n.x = Math.max(0, ox + ev.clientX - sx);
-        n.y = Math.max(0, oy + ev.clientY - sy);
+        var p = pt(ev);
+        n.x = Math.max(0, ox + p.x - st.x);
+        n.y = Math.max(0, oy + p.y - st.y);
         el.style.left = n.x + 'px';
         el.style.top = n.y + 'px';
       }
       function up(){
-        handle.removeEventListener('pointermove', mv);
-        handle.removeEventListener('pointerup', up);
-        save();
+        document.removeEventListener('pointermove', mv);
+        document.removeEventListener('pointerup', up);
+        saveNotes();
       }
-      handle.addEventListener('pointermove', mv);
-      handle.addEventListener('pointerup', up);
+      document.addEventListener('pointermove', mv);
+      document.addEventListener('pointerup', up);
     });
 
     if(!editing) el.style.pointerEvents = 'none';
@@ -1347,43 +1381,169 @@ applyFilters();
   }
 
   layer.addEventListener('click', function(e){
-    if(!editing) return;
-    if(e.target && e.target.closest && e.target.closest('.note')) return;
-    var o = origin();
-    var n = {
-      id: 'n' + Date.now() + Math.floor(Math.random() * 1000),
-      x: Math.max(0, e.pageX - o.x - 20),
-      y: Math.max(0, e.pageY - o.y - 14),
-      text: ''
-    };
+    if(!editing || tool !== 'note') return;
+    if(has('.note', e.target) || has('.shape', e.target)) return;
+    var p = pt(e);
+    var n = { id: uid(), x: Math.max(0, p.x - 20), y: Math.max(0, p.y - 14), text: '' };
     notes.push(n);
-    save();
-    render();
-    var t = layer.querySelector('.note[data-id="' + n.id + '"] .nt');
-    if(t) setTimeout(function(){ t.focus(); }, 20);
+    saveNotes();
+    renderNotes();
+    var t = noteBox.querySelector('.note[data-id="' + n.id + '"] .nt');
+    if(t) setTimeout(function(){ try{ t.focus(); }catch(e){} }, 20);
   });
 
+  /* ---------- 箭头 / 方框 ---------- */
+  function drawShapes(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var defs = document.createElementNS(NS, 'defs');
+    var mk = document.createElementNS(NS, 'marker');
+    mk.setAttribute('id', 'arwHead');
+    mk.setAttribute('viewBox', '0 0 10 10');
+    mk.setAttribute('refX', '9');
+    mk.setAttribute('refY', '5');
+    mk.setAttribute('markerWidth', '7');
+    mk.setAttribute('markerHeight', '7');
+    mk.setAttribute('orient', 'auto-start-reverse');
+    var pth = document.createElementNS(NS, 'path');
+    pth.setAttribute('d', 'M0,0 L10,5 L0,10 z');
+    pth.setAttribute('fill', '#E8355E');
+    mk.appendChild(pth);
+    defs.appendChild(mk);
+    svg.appendChild(defs);
+
+    shapes.forEach(function(s){ svg.appendChild(buildShape(s)); });
+    syncBtns();
+  }
+
+  function mkEl(tag, attrs){
+    var n = document.createElementNS(NS, tag);
+    Object.keys(attrs).forEach(function(k){ n.setAttribute(k, attrs[k]); });
+    return n;
+  }
+
+  function buildShape(s){
+    var g = mkEl('g', { 'class': 'shape', 'data-id': s.id });
+    var x1 = s.x1, y1 = s.y1, x2 = s.x2, y2 = s.y2;
+    var dx, dy;
+
+    if(s.type === 'arrow'){
+      g.appendChild(mkEl('line', { x1:x1, y1:y1, x2:x2, y2:y2, 'class':'hit' }));
+      g.appendChild(mkEl('line', { x1:x1, y1:y1, x2:x2, y2:y2, 'class':'vis', 'marker-end':'url(#arwHead)' }));
+      dx = (x1 + x2) / 2;
+      dy = (y1 + y2) / 2 - 16;
+    } else {
+      var rx = Math.min(x1, x2), ry = Math.min(y1, y2);
+      var rw = Math.abs(x2 - x1), rh = Math.abs(y2 - y1);
+      g.appendChild(mkEl('rect', { x:rx, y:ry, width:rw, height:rh, 'class':'hit' }));
+      g.appendChild(mkEl('rect', { x:rx, y:ry, width:rw, height:rh, rx:5, 'class':'vis' }));
+      dx = rx + rw;
+      dy = (ry < 14) ? ry + 14 : ry - 12;
+    }
+
+    var dg = mkEl('g', { 'class': 'sh-del', transform: 'translate(' + dx + ',' + dy + ')' });
+    dg.appendChild(mkEl('circle', { r: 8 }));
+    var tx = mkEl('text', { x: 0, y: 0 });
+    tx.textContent = '✕';
+    dg.appendChild(tx);
+    g.appendChild(dg);
+
+    dg.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+    dg.addEventListener('click', function(e){
+      e.stopPropagation();
+      shapes = shapes.filter(function(x){ return x.id !== s.id; });
+      saveShapes(); drawShapes();
+    });
+
+    g.addEventListener('pointerdown', function(e){
+      if(!editing) return;
+      if(has('.sh-del', e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var st = pt(e), o1 = s.x1, o2 = s.y1, o3 = s.x2, o4 = s.y2;
+      function mv(ev){
+        var p = pt(ev);
+        var mx = p.x - st.x, my = p.y - st.y;
+        s.x1 = o1 + mx; s.y1 = o2 + my; s.x2 = o3 + mx; s.y2 = o4 + my;
+        drawShapes();
+      }
+      function up(){
+        document.removeEventListener('pointermove', mv);
+        document.removeEventListener('pointerup', up);
+        saveShapes();
+      }
+      document.addEventListener('pointermove', mv);
+      document.addEventListener('pointerup', up);
+    });
+
+    return g;
+  }
+
+  layer.addEventListener('pointerdown', function(e){
+    if(!editing || tool === 'note') return;
+    if(has('.shape', e.target) || has('.note', e.target)) return;
+    e.preventDefault();
+    var p = pt(e);
+    var s = { id: uid(), type: tool, x1: p.x, y1: p.y, x2: p.x, y2: p.y };
+    shapes.push(s);
+    drawShapes();
+    function mv(ev){
+      var q = pt(ev);
+      s.x2 = q.x; s.y2 = q.y;
+      drawShapes();
+    }
+    function up(){
+      document.removeEventListener('pointermove', mv);
+      document.removeEventListener('pointerup', up);
+      if(Math.abs(s.x2 - s.x1) < 12 && Math.abs(s.y2 - s.y1) < 12){
+        shapes = shapes.filter(function(x){ return x.id !== s.id; });
+        drawShapes();
+      } else {
+        saveShapes();
+      }
+    }
+    document.addEventListener('pointermove', mv);
+    document.addEventListener('pointerup', up);
+  });
+
+  /* ---------- 工具条 ---------- */
   function syncBtns(){
     clearBtn.style.display = editing ? '' : 'none';
-    eyeBtn.style.display = (!editing && notes.length) ? '' : 'none';
-    var hidden = document.body.classList.contains('hide-notes');
-    eyeBtn.textContent = hidden ? '◉ 显示批注' : '◎ 隐藏批注';
+    toolBox.style.display = editing ? '' : 'none';
+    var any = (notes.length + shapes.length) > 0;
+    eyeBtn.style.display = (!editing && any) ? '' : 'none';
+    eyeBtn.textContent = document.body.classList.contains('hide-notes') ? '◉ 显示批注' : '◎ 隐藏批注';
   }
 
   function setMode(v){
     editing = v;
     document.body.classList.toggle('noting', v);
     btn.textContent = v ? '✓ 完成' : '✎ 批注';
-    render();
+    renderNotes();
+    drawShapes();
+  }
+
+  function setTool(t){
+    tool = t;
+    Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-tool') === t);
+    });
+    document.body.classList.toggle('tool-draw', t !== 'note');
   }
 
   btn.addEventListener('click', function(){ setMode(!editing); });
 
+  Array.prototype.forEach.call(document.querySelectorAll('#toolBox .tb'), function(b){
+    b.addEventListener('click', function(){ setTool(b.getAttribute('data-tool')); });
+  });
+
   clearBtn.addEventListener('click', function(){
-    if(!notes.length) return;
-    if(window.confirm('清空全部批注？')){
+    if(!notes.length && !shapes.length) return;
+    if(window.confirm('清空全部批注（便签 + 箭头方框）？')){
       notes = [];
-      save(); render();
+      shapes = [];
+      saveNotes(); saveShapes();
+      renderNotes(); drawShapes();
     }
   });
 
@@ -1392,7 +1552,9 @@ applyFilters();
     syncBtns();
   });
 
-  render();
+  setTool('note');
+  renderNotes();
+  drawShapes();
   setMode(false);
 })();
 </script>
