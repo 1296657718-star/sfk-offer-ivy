@@ -1501,10 +1501,19 @@ applyFilters();
       if(m.w) im.style.width = m.w + 'px';
       box.appendChild(im);
       layer.appendChild(box);
+      /* 滚动时贴图同样夹在可视区内，且排在已放好的便签下面，避免压盖 */
+      var bh = box.offsetHeight || 0;
+      var bd = viewBand();
+      var by = parseFloat(box.style.top) || 0;
+      if(bd && box.style.visibility !== 'hidden'){
+        by = avoidOverlap(clampY(by, bh, bd), bh, bd);
+        box.style.top = by + 'px';
+      }
+      placed.push({ top: by, bottom: by + bh });
     });
   }
 
-  var notes = [], shapes = [], editing = false, tool = 'note';
+  var notes = [], shapes = [], editing = false, tool = 'note', placed = [];
 
   function toast(msg){
     if(typeof window.toast === 'function') window.toast(msg);
@@ -1597,6 +1606,38 @@ applyFilters();
     return { x: n.x, y: n.y };
   }
 
+  /* 手机屏幕可视区（换算到批注层坐标系）。
+     .screen 是内部滚动容器，而批注层固定在视口上：锚点元素随内容滚走时，
+     批注若照搬坐标会飘出屏幕看不见，所以要把批注夹在可视区内（到边缘停住）。 */
+  function viewBand(){
+    var sc = q('#screen');
+    if(!sc) return null;
+    var r = sc.getBoundingClientRect();
+    var o = origin();
+    return { top: r.top + window.pageYOffset - o.y, bottom: r.bottom + window.pageYOffset - o.y };
+  }
+
+  function clampY(y, h, band, pad){
+    if(!band) return y;
+    var p = (pad == null ? 8 : pad);
+    var min = band.top + p, max = band.bottom - h - p;
+    if(max < min) max = min;
+    return Math.max(min, Math.min(y, max));
+  }
+
+  /* 多条批注夹到边缘后避免互相压盖：与已放置区间冲突就往下让 */
+  function avoidOverlap(y, h, band){
+    var yy = y;
+    for(var i = 0; i < placed.length; i++){
+      if(yy < placed[i].bottom && yy + h > placed[i].top) yy = placed[i].bottom + 8;
+    }
+    if(band){
+      var maxY = band.bottom - h - 8;
+      if(yy > maxY) yy = Math.max(band.top + 8, maxY);
+    }
+    return yy;
+  }
+
   function shapeGeom(s){
     if(s.a1){
       var e1 = q(s.a1);
@@ -1608,6 +1649,11 @@ applyFilters();
       if(s.type === 'arrow'){
         var p1 = anchorPoint(L1, s.from || 'right');
         var p2 = (r2 && (r2.width || r2.height)) ? anchorPoint(toLayer(r2), s.to || 'left') : { x: s.x2 || 0, y: s.y2 || 0 };
+        var bd = viewBand();
+        if(bd){  /* 端点也夹进可视区，锚点滚出去时箭头仍指向边缘、不会画到屏幕外 */
+          p1 = { x: p1.x, y: Math.max(bd.top, Math.min(p1.y, bd.bottom)) };
+          p2 = { x: p2.x, y: Math.max(bd.top, Math.min(p2.y, bd.bottom)) };
+        }
         return { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y };
       }
       var L2 = r2 ? toLayer(r2) : L1;
@@ -1626,7 +1672,19 @@ applyFilters();
   function renderNotes(){
     layer.innerHTML = '';
     var page = curPage();
-    notes.filter(function(n){ return effPage(n) === page; }).forEach(function(n){ layer.appendChild(buildNote(n)); });
+    var band = viewBand();
+    notes.filter(function(n){ return effPage(n) === page; }).forEach(function(n){
+      var el = buildNote(n);
+      layer.appendChild(el);
+      if(el.style.visibility === 'hidden') return;
+      var h = el.offsetHeight || 0;
+      var y = parseFloat(el.getAttribute('data-gy') || '0');
+      if(band){
+        var yy = avoidOverlap(clampY(y, h, band), h, band);
+        el.style.top = yy + 'px';
+      }
+      placed.push({ top: parseFloat(el.style.top) || y, bottom: (parseFloat(el.style.top) || y) + h });
+    });
   }
 
   function renderShapes(){
@@ -1661,6 +1719,7 @@ applyFilters();
   }
 
   function render(){
+    placed = [];
     renderNotes();
     renderShapes();
     renderPresetImgs();
@@ -1676,7 +1735,7 @@ applyFilters();
     if(n.w) el.style.width = n.w + 'px';
     var g = noteGeom(n);
     if(!g) el.style.visibility = 'hidden';
-    else { el.style.left = g.x + 'px'; el.style.top = g.y + 'px'; }
+    else { el.style.left = g.x + 'px'; el.style.top = g.y + 'px'; el.setAttribute('data-gy', g.y); }
 
     var handle = document.createElement('div');
     handle.className = 'nh';
