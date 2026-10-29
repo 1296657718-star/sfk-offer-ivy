@@ -67,8 +67,6 @@
   .orb { position:absolute; border-radius:50%; }
   .g-ug { background:linear-gradient(140deg,#F54B2A 0%,#F98A2B 60%,#FBB03B 100%); }
   .g-pg { background:linear-gradient(140deg,#12A5D8 0%,#2E6BE8 100%); }
-  .gicon { position:absolute; right:8px; bottom:8px; font-size:30px; opacity:.35; }
-  .gicon2 { position:absolute; right:6px; top:14px; font-size:26px; opacity:.3; }
 
   .depts { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; padding:10px 12px 0; }
   .dept { border-radius:10px; height:56px; color:#fff; font-size:10.5px; line-height:1.3; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-weight:600; padding:4px; }
@@ -79,7 +77,6 @@
   .d4 { background:linear-gradient(150deg,#F5C24B,#E89A2B); }
   .d5 { background:linear-gradient(150deg,#F0904B,#E06A2B); }
   .d6 { background:linear-gradient(150deg,#6AA8F0,#3B7BE0); }
-  .d7 { background:linear-gradient(150deg,#5BC8D8,#2E9EB0); }
 
   .secrow { display:flex; align-items:center; justify-content:space-between; padding:18px 12px 9px; }
   .secrow .h { font-size:15px; font-weight:700; }
@@ -129,24 +126,13 @@
   .ivy .s { font-size:10.5px; opacity:.88; margin-top:4px; }
   .ivy .go { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:11px; }
 
-  .stat-row { display:flex; gap:7px; margin-top:16px; }
-  .stat { flex:1; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.3); border-radius:10px; padding:9px 4px; text-align:center; }
-  .stat .num { font-size:21px; font-weight:800; line-height:1; }
-  .stat .u { font-size:10px; opacity:.9; }
-  .stat .lb { font-size:10.5px; opacity:.92; margin-top:5px; }
-  .stat.on { background:#fff; color:#B32DA8; border-color:#fff; }
 
   .tabs { display:flex; background:#fff; padding:0 12px; border-bottom:1px solid #F2F2F2; position:sticky; top:40px; z-index:15; }
   .tab { flex:1; text-align:center; padding:11px 4px; font-size:12.5px; color:#777; border-bottom:2px solid transparent; }
   .tab.on { color:#E8355E; font-weight:700; border-bottom-color:#E8355E; }
-  .tier-h { display:flex; align-items:baseline; justify-content:space-between; padding:16px 14px 8px; }
-  .tier-h .n { font-size:13.5px; font-weight:700; }
-  .tier-h .n span { font-size:10px; color:#AAA; font-weight:400; margin-left:5px; }
-  .tier-h .c { font-size:13px; color:#E8355E; font-weight:700; }
   .pool-h { display:flex; align-items:baseline; justify-content:space-between; padding:22px 14px 0; }
   .pool-h .n { font-size:15.5px; font-weight:800; letter-spacing:.5px; }
   .pool-h .c { font-size:11.5px; color:#B32DA8; font-weight:700; }
-  .pool-h .pmid { display:none; }
   .rank-tip { font-size:10.5px; color:#E8355E; padding:4px 14px 0; font-weight:400; }
   .ivy-note { font-size:11px; color:#888; padding:14px 14px 0; line-height:1.6; }
   .seg { display:flex; background:#F5F5F7; border-radius:10px; margin:12px 14px 0; padding:3px; }
@@ -227,24 +213,8 @@
   .demo { background:#FFF7E6; color:#9A6A00; font-size:10.5px; padding:7px 14px; }
   .tap { cursor:pointer; transition:transform .12s ease; }
   .tap:active { transform:scale(.98); }
-  .form-hero { background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 100%); color:#fff; padding:22px 16px 26px; position:relative; overflow:hidden; }
-  .form-hero .t { font-size:22px; font-weight:800; letter-spacing:.5px; }
-  .form-hero .s { font-size:11.5px; opacity:.9; margin-top:9px; line-height:1.65; }
-  .benefit { display:flex; gap:11px; padding:15px 14px 0; }
-  .benefit .ic { width:34px; height:34px; border-radius:9px; background:#FDEEF2; color:#E8355E; display:flex; align-items:center; justify-content:center; font-size:14px; flex:0 0 34px; }
-  .benefit .tt { font-size:13px; font-weight:700; }
-  .benefit .ss { font-size:11px; color:#999; margin-top:3px; line-height:1.55; }
-  .fld { padding:15px 14px 0; }
-  .fld .lb { font-size:12px; font-weight:600; margin-bottom:8px; }
-  .fld .lb i { color:#E8355E; font-style:normal; }
-  .inp { width:100%; border:1px solid #EBEBEB; border-radius:9px; padding:11px 12px; font-size:13px; background:#FAFAFA; outline:none; color:#333; }
-  .inp:focus { border-color:#E8355E; background:#fff; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; }
   .chip { border:1px solid #EBEBEB; background:#FAFAFA; border-radius:18px; padding:7px 13px; font-size:12px; color:#555; cursor:pointer; }
   .chip.on { background:#FDEEF2; border-color:#E8355E; color:#E8355E; font-weight:600; }
-  .ftip { font-size:11px; color:#E8355E; padding:14px 14px 0; min-height:16px; }
-  .submit { margin:8px 14px 0; background:linear-gradient(90deg,#E8355E,#F0517A); color:#fff; text-align:center; padding:14px; border-radius:26px; font-size:15px; font-weight:700; box-shadow:0 6px 16px rgba(232,53,94,.28); }
-  .agree { font-size:10.5px; color:#AAA; padding:12px 20px 28px; text-align:center; line-height:1.6; }
   .succ { padding:52px 14px 0; text-align:center; }
   .succ .cir { width:72px; height:72px; border-radius:50%; background:#E8355E; color:#fff; font-size:30px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
   .succ .t { font-size:19px; font-weight:800; }
@@ -257,9 +227,7 @@
   .hint { font-size:11px; color:#9AA3AF; margin-top:14px; }
   .ic { width:14px; height:14px; display:inline-block; vertical-align:middle; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .ic-sm { width:9px; height:9px; stroke-width:2.6; }
-  .gicon2 .ic, .gicon .ic { width:26px; height:26px; stroke-width:1.6; }
   .fsearch .ic { width:12px; height:12px; stroke-width:2.4; }
-  .benefit .ic .ic { width:15px; height:15px; stroke-width:1.9; }
   .succ .cir .ic { width:32px; height:32px; stroke-width:2.8; }
   .navbar .back .ic { width:12px; height:12px; stroke-width:2.4; }
   #pf.active { display:flex; flex-direction:column; height:100%; overflow:hidden; }
@@ -1105,11 +1073,6 @@ document.querySelectorAll('.chip').forEach(function(c){
     c.classList.add('on');
   });
 });
-
-function picked(g){
-  var el = document.querySelector('.chip[data-group="' + g + '"].on');
-  return el ? el.textContent : '';
-}
 
 document.getElementById('smartGo').addEventListener('click', function(){
   toast('联动小程序原生「智能选校」（原型演示：点开始选校后进入原生选校流程）');
