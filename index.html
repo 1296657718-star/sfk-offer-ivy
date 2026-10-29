@@ -19,7 +19,8 @@
   body.noting #noteBox { pointer-events:auto; }
   .shape .vis { stroke:#E8355E; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
   .shape .hit { stroke:transparent; fill:rgba(0,0,0,0); stroke-width:18; cursor:move; }
-  .shape .sh-del { cursor:pointer; }
+  .shape .sh-del { cursor:pointer; opacity:0; transition:opacity .12s; }
+  .shape:hover .sh-del { opacity:1; }
   .shape .sh-del circle { fill:#E8355E; }
   .shape .sh-del text { fill:#fff; font-size:10px; text-anchor:middle; dominant-baseline:central; font-family:sans-serif; }
   body:not(.noting) .shape .sh-del { display:none; }
