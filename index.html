@@ -1277,20 +1277,14 @@ applyFilters();
 
   var NS = 'http://www.w3.org/2000/svg';
   var KEY = 'sfk_proto_notes_v3';
-  var PRESET_V = 2;
+  var PRESET_V = 3;
 
-  /* 预置批注（写在榜单列表页 p1）：
-     - 方框框住「科系」「专业」两个筛选项
-     - 黄色便签放在下方，箭头从按钮引到便签
-     升级 PRESET_V 并加条目即可新增常驻批注；用户删掉的预置不会被重新合并 */
-  var PRESET_NOTES = [
-    { id: 'pn-dept-major', page: 'p1', text: '调用 offer 榜单的专业数据和科系数据',
-      anchor: '.fbtn[data-f="major"]', dx: 300, dy: -6 }
-  ];
-  var PRESET_SHAPES = [
-    { id: 'ps-box',   page: 'p1', type: 'rect',  a1: '.fbtn[data-f="dept"]', a2: '.fbtn[data-f="major"]', d1: [-4,-4], d2: [4,4] },
-    { id: 'ps-arrow', page: 'p1', type: 'arrow', a1: '.fbtn[data-f="major"]', a2: '.note[data-id="pn-dept-major"]', from: 'right', to: 'left' }
-  ];
+  /* 预置批注清单（常驻批注写在这里；升级 PRESET_V 并加条目即可新增）
+     2026-10-29：原 p1 的「调用 offer 榜单的专业数据和科系数据」示例批注已按用户要求下线，
+     对应 id 放进 DROPPED_IDS，老浏览器数据升级时会自动剔除。 */
+  var PRESET_NOTES = [];
+  var PRESET_SHAPES = [];
+  var DROPPED_IDS = ['pn-dept-major', 'ps-box', 'ps-arrow'];
 
   var notes = [], shapes = [], editing = false, tool = 'note';
 
@@ -1305,6 +1299,8 @@ applyFilters();
     var slist = (store && store.shapes instanceof Array) ? store.shapes : null;
     if(!store || store.v < PRESET_V){
       list = list || []; slist = slist || [];
+      list = list.filter(function(x){ return DROPPED_IDS.indexOf(x.id) < 0; });
+      slist = slist.filter(function(x){ return DROPPED_IDS.indexOf(x.id) < 0; });
       PRESET_NOTES.forEach(function(p){ if(!list.some(function(x){ return x.id === p.id; })) list.push(p); });
       PRESET_SHAPES.forEach(function(p){ if(!slist.some(function(x){ return x.id === p.id; })) slist.push(p); });
       notes = list; shapes = slist;
