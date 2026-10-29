@@ -7,7 +7,24 @@
 
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#EDF0F4; color:#222; display:flex; flex-direction:column; align-items:center; padding:22px 0 40px; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; background:#EDF0F4; color:#222; display:flex; flex-direction:column; align-items:center; padding:44px 40px 110px; min-height:100vh; box-sizing:border-box; position:relative; }
+
+  /* ===== 批注便签层 ===== */
+  #noteLayer { position:absolute; top:0; right:0; bottom:0; left:0; z-index:50; pointer-events:none; }
+  body.noting #noteLayer { pointer-events:auto; cursor:crosshair; }
+  body.hide-notes #noteLayer { display:none; }
+  .note { position:absolute; width:190px; box-sizing:border-box; background:#FFF9C4; border:1px solid #EDE08A; border-radius:8px; padding:15px 10px 10px; box-shadow:0 6px 18px rgba(80,70,20,.18); font-size:12.5px; line-height:1.6; color:#4A4032; }
+  .note .nh { position:absolute; left:0; right:0; top:0; height:13px; border-radius:8px 8px 0 0; cursor:move; background:repeating-linear-gradient(90deg,#F0E4A0 0 4px,transparent 4px 8px); opacity:.6; }
+  .note .nt { outline:none; white-space:pre-wrap; word-break:break-word; min-height:20px; }
+  .note .nt:empty:before { content:'写点批注…'; color:#C6BA83; }
+  .note .nx { position:absolute; right:5px; top:0; font-size:11px; color:#B9A96A; cursor:pointer; padding:1px 4px; }
+  body:not(.noting) .note .nx { display:none; }
+  body:not(.noting) .note .nh { cursor:default; }
+  .note-bar { position:fixed; right:18px; bottom:18px; z-index:60; display:flex; gap:8px; align-items:center; }
+  .nb { border:none; border-radius:20px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,.16); }
+  .nb-main { background:#2B2B2B; color:#fff; }
+  body.noting .nb-main { background:#E8355E; }
+  .nb-ghost { background:#fff; color:#777; border:1px solid #E3E3E3; font-weight:400; }
   .phone { width:392px; background:#111; border-radius:38px; padding:10px; box-shadow:0 14px 44px rgba(0,0,0,.22); position:relative; }
   .screen { width:372px; height:764px; border-radius:30px; overflow-y:auto; overflow-x:hidden; background:#fff; position:relative; }
   .screen::-webkit-scrollbar { width:0; }
@@ -1217,6 +1234,166 @@ applyFilters();
       })
       .catch(function(){});
   }catch(e){}
+})();
+</script>
+
+<!-- 批注便签：点右下角「批注」进入编辑态，点画布任意位置写字；可拖动、可删除、自动存本地 -->
+<div id="noteLayer"></div>
+<div class="note-bar">
+  <button class="nb nb-ghost" id="noteToggle" type="button" style="display:none">◎ 隐藏批注</button>
+  <button class="nb nb-ghost" id="noteClear" type="button" style="display:none">清空</button>
+  <button class="nb nb-main" id="noteBtn" type="button">✎ 批注</button>
+</div>
+<script>
+(function(){
+  var layer = document.getElementById('noteLayer');
+  var btn = document.getElementById('noteBtn');
+  var clearBtn = document.getElementById('noteClear');
+  var eyeBtn = document.getElementById('noteToggle');
+  if(!layer || !btn) return;
+
+  var KEY = 'sfk_proto_notes_v1';
+  var notes = [];
+  var editing = false;
+
+  try{ notes = JSON.parse(localStorage.getItem(KEY) || '[]'); }catch(e){ notes = []; }
+  if(!(notes instanceof Array)) notes = [];
+
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(notes)); }catch(e){}
+    syncBtns();
+  }
+
+  function origin(){
+    var r = layer.getBoundingClientRect();
+    return { x: r.left + window.pageXOffset, y: r.top + window.pageYOffset };
+  }
+
+  function render(){
+    layer.innerHTML = '';
+    notes.forEach(function(n){ layer.appendChild(build(n)); });
+    syncBtns();
+  }
+
+  function build(n){
+    var el = document.createElement('div');
+    el.className = 'note';
+    el.setAttribute('data-id', n.id);
+    el.style.left = n.x + 'px';
+    el.style.top = n.y + 'px';
+
+    var handle = document.createElement('div');
+    handle.className = 'nh';
+
+    var del = document.createElement('div');
+    del.className = 'nx';
+    del.textContent = '✕';
+
+    var txt = document.createElement('div');
+    txt.className = 'nt';
+    txt.textContent = n.text || '';
+    txt.contentEditable = editing ? 'true' : 'false';
+
+    el.appendChild(handle);
+    el.appendChild(txt);
+    el.appendChild(del);
+
+    del.addEventListener('click', function(e){
+      e.stopPropagation();
+      notes = notes.filter(function(x){ return x.id !== n.id; });
+      save(); render();
+    });
+
+    txt.addEventListener('input', function(){
+      n.text = txt.textContent;
+      save();
+    });
+
+    txt.addEventListener('blur', function(){
+      var v = (txt.textContent || '').replace(/\s+$/,'');
+      if(!v.trim()){
+        notes = notes.filter(function(x){ return x.id !== n.id; });
+        render();
+      } else {
+        n.text = v;
+        save();
+      }
+    });
+
+    txt.addEventListener('mousedown', function(e){ if(editing) e.stopPropagation(); });
+
+    handle.addEventListener('pointerdown', function(e){
+      if(!editing) return;
+      e.preventDefault();
+      var sx = e.clientX, sy = e.clientY, ox = n.x, oy = n.y;
+      try{ handle.setPointerCapture(e.pointerId); }catch(err){}
+      function mv(ev){
+        n.x = Math.max(0, ox + ev.clientX - sx);
+        n.y = Math.max(0, oy + ev.clientY - sy);
+        el.style.left = n.x + 'px';
+        el.style.top = n.y + 'px';
+      }
+      function up(){
+        handle.removeEventListener('pointermove', mv);
+        handle.removeEventListener('pointerup', up);
+        save();
+      }
+      handle.addEventListener('pointermove', mv);
+      handle.addEventListener('pointerup', up);
+    });
+
+    if(!editing) el.style.pointerEvents = 'none';
+    return el;
+  }
+
+  layer.addEventListener('click', function(e){
+    if(!editing) return;
+    if(e.target && e.target.closest && e.target.closest('.note')) return;
+    var o = origin();
+    var n = {
+      id: 'n' + Date.now() + Math.floor(Math.random() * 1000),
+      x: Math.max(0, e.pageX - o.x - 20),
+      y: Math.max(0, e.pageY - o.y - 14),
+      text: ''
+    };
+    notes.push(n);
+    save();
+    render();
+    var t = layer.querySelector('.note[data-id="' + n.id + '"] .nt');
+    if(t) setTimeout(function(){ t.focus(); }, 20);
+  });
+
+  function syncBtns(){
+    clearBtn.style.display = editing ? '' : 'none';
+    eyeBtn.style.display = (!editing && notes.length) ? '' : 'none';
+    var hidden = document.body.classList.contains('hide-notes');
+    eyeBtn.textContent = hidden ? '◉ 显示批注' : '◎ 隐藏批注';
+  }
+
+  function setMode(v){
+    editing = v;
+    document.body.classList.toggle('noting', v);
+    btn.textContent = v ? '✓ 完成' : '✎ 批注';
+    render();
+  }
+
+  btn.addEventListener('click', function(){ setMode(!editing); });
+
+  clearBtn.addEventListener('click', function(){
+    if(!notes.length) return;
+    if(window.confirm('清空全部批注？')){
+      notes = [];
+      save(); render();
+    }
+  });
+
+  eyeBtn.addEventListener('click', function(){
+    document.body.classList.toggle('hide-notes');
+    syncBtns();
+  });
+
+  render();
+  setMode(false);
 })();
 </script>
 </body>
