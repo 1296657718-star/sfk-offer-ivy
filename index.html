@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261029-181223">
+<meta name="x-build" content="20261030-173955">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -100,29 +100,45 @@
   .rside .k { font-size:9px; color:#BBB; }
   .rside .v { font-size:19px; font-weight:800; color:#E8355E; line-height:1.1; }
 
-  .bk-hero { background:linear-gradient(150deg,#F54B2A 0%,#F98A2B 100%); color:#fff; padding:26px 16px 30px; position:relative; overflow:hidden; }
-  .bk-hero .sm { font-size:12px; opacity:.95; letter-spacing:1px; }
-  .bk-hero .lg { font-size:30px; font-weight:800; margin-top:6px; letter-spacing:1px; }
-  .bk-hero .slogo { position:absolute; right:14px; top:14px; font-size:12px; font-weight:800; letter-spacing:2px; opacity:.92; }
-  .bk-hero .bstats { display:flex; gap:22px; margin-top:18px; position:relative; z-index:2; }
-  .bk-hero .bstats .k { font-size:11px; opacity:.92; }
-  .bk-hero .bstats .v { font-size:19px; font-weight:800; margin-top:3px; }
-  .bk-hero .bstats .v small { font-size:11px; font-weight:600; }
-  .bk-hero .badge { position:absolute; right:16px; bottom:-18px; width:58px; height:58px; border-radius:50%; background:#E8355E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; box-shadow:0 6px 16px rgba(0,0,0,.2); z-index:3; }
-  /* 本科榜单：原版暖黄底 + 白卡四列网格 */
-  .bk-sec { background:#FBD24E; padding:14px 12px 18px; }
-  .bk-card { background:#fff; border-radius:14px; padding:14px 12px 16px; margin-bottom:12px; }
-  .bk-card .sh { font-size:14px; font-weight:800; color:#222; }
-  .bk-card .sh em { font-style:normal; color:#E8355E; font-size:16px; font-weight:800; }
-  .bk-card .ss { font-size:10.5px; color:#A8A8A8; margin:4px 0 11px; }
+  /* 本科榜单：对齐小程序原页。红橙头图落到暖黄底，院校格直接铺在黄底上 */
+  #p2 { background:#FFE14A; }
+  #p2 .status, #p2 .navbar { background:#fff; }
+  .bk-hero { background:linear-gradient(180deg,#FF4158 0%,#FF5A3C 22%,#FF7C30 48%,#FFAA2C 72%,#FFD24A 100%); color:#fff; padding:16px 16px 8px; position:relative; overflow:hidden; min-height:292px; }
+  .bk-hero .sm { position:relative; z-index:2; font-size:20px; font-weight:700; letter-spacing:.2px; }
+  .bk-hero .lg { position:relative; z-index:2; font-size:28px; font-weight:800; margin-top:2px; letter-spacing:.4px; }
+  .bk-hero .slogo { position:absolute; right:12px; top:6px; z-index:3; text-align:right; line-height:1.05; color:#fff; }
+  .bk-hero .slogo b { display:block; font-size:18px; letter-spacing:.5px; }
+  .bk-hero .slogo small { display:block; font-size:6px; font-weight:700; letter-spacing:.3px; opacity:.92; }
+  .bk-hero .slogo em { display:block; margin-top:1px; font-style:normal; font-size:11px; font-weight:700; }
+  .bk-stat { position:relative; z-index:2; margin-top:10px; max-width:228px; }
+  .bk-stat .k { font-size:13px; font-weight:500; opacity:.95; }
+  .bk-stat .v { display:flex; align-items:baseline; white-space:nowrap; font-size:40px; font-weight:800; line-height:1.05; letter-spacing:-.6px; }
+  .bk-stat .v small { font-size:16px; font-weight:700; margin-left:4px; letter-spacing:0; }
+  .bk-cut { position:relative; z-index:2; margin:12px 0 4px; max-width:210px; font-size:11px; line-height:1.45; color:rgba(255,255,255,.9); }
+  .bk-art { position:absolute; right:0; top:0; width:210px; height:280px; pointer-events:none; z-index:1; }
+  .sh-blob { position:absolute; right:-6px; top:34px; width:118px; height:132px; background:#FFE250; border-radius:26px; transform:rotate(-18deg); box-shadow:-14px 18px 0 #FFC431; }
+  .sh-tri-o { position:absolute; right:108px; top:78px; width:72px; height:86px; background:#FF7A1A; clip-path:polygon(40% 0, 100% 78%, 8% 100%); transform:rotate(8deg); }
+  .sh-ball { position:absolute; right:18px; top:112px; width:92px; height:92px; border-radius:50%; background:radial-gradient(circle at 32% 28%, #FFB0A8 0%, #FF3B48 40%, #D9042C 78%); box-shadow:12px 16px 0 rgba(255,160,40,.45), inset -8px -10px 14px rgba(120,0,20,.25); display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; font-weight:800; letter-spacing:1px; }
+  .sh-tri-y { position:absolute; right:2px; top:196px; width:78px; height:72px; background:#FFE250; clip-path:polygon(80% 0, 100% 100%, 0 78%); }
+  .sh-squig { position:absolute; right:104px; top:150px; width:46px; height:64px; }
+  .bk-sec { background:#FFE14A; padding:6px 12px 28px; }
+  .bk-block { margin:0 0 18px; }
+  .bk-block .sh { font-size:15px; font-weight:800; color:#222; letter-spacing:.2px; }
+  .bk-block .sh em { font-style:normal; color:#E4234A; font-size:17px; font-weight:800; }
+  .bk-block .ss { font-size:11px; color:#E08A96; margin:3px 0 10px; }
   .g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-  .g4 .g { background:#FCFCFC; border:1px solid #F2F2F2; border-radius:8px; padding:8px 4px 7px; text-align:center; }
-  .g4 .g .nm { font-size:9.5px; color:#444; line-height:1.25; height:24px; overflow:hidden; }
-  .g4 .g .v { font-size:14px; color:#E8355E; font-weight:800; margin-top:4px; line-height:1; }
-  .g4 .g .u { font-size:9px; color:#E8355E; font-weight:700; }
+  .g4 .g { background:#fff; border-radius:4px; padding:8px 3px 7px; text-align:center; box-shadow:0 1px 0 rgba(180,120,20,.08); }
+  .g4 .g .nm { font-size:11px; color:#333; line-height:1.25; min-height:28px; }
+  .g4 .g .v { font-size:22px; color:#E1063A; font-weight:800; margin-top:2px; line-height:1; }
+  .g4 .g .u { font-size:12px; color:#E1063A; font-weight:700; margin-top:1px; }
   .meta { font-size:9.5px; color:#AAA; padding:9px 14px 4px; }
 
-  .ivy { margin:10px 12px 0; background:linear-gradient(120deg,#6C2BD9 0%,#B32DA8 100%); border-radius:14px; padding:15px 14px; color:#fff; display:flex; align-items:center; gap:10px; position:relative; overflow:hidden; }
+  .bk-dock { position:sticky; top:300px; z-index:18; height:0; pointer-events:none; }
+  .bk-fab { pointer-events:auto; position:absolute; right:6px; top:-92px; width:34px; height:34px; border-radius:7px; background:#7B46F2; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(70,30,170,.25); cursor:pointer; }
+  .bk-fab + .bk-fab { top:-50px; }
+  .bk-fab .ic { width:18px; height:18px; stroke-width:1.8; }
+
+  .ivy { margin:-2px 12px 10px; background:linear-gradient(120deg,#6C2BD9 0%,#B32DA8 100%); border-radius:14px; padding:15px 14px; color:#fff; display:flex; align-items:center; gap:10px; position:relative; z-index:3; overflow:hidden; }
   .ivy .h { font-size:16px; font-weight:800; }
   .ivy .s { font-size:10.5px; opacity:.88; margin-top:4px; }
   .ivy .go { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:11px; }
@@ -295,6 +311,7 @@
 <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11.2 V17 M12 7.4 v1.2"/></symbol>
 <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4 v10 M7.5 10.5 L12 15 L16.5 10.5 M5 19.5 h14"/></symbol>
 <symbol id="i-sh" viewBox="0 0 24 24"><path d="M12 14 V4 M8 7.5 L12 3.5 L16 7.5 M5 12 v8 h14 v-8"/></symbol>
+<symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4.5 h5.5 V10"/><path d="M19.2 4.8 L10.2 13.8"/><path d="M16.5 13.2 V19.5 H4.5 V7.5 H11"/></symbol>
 </defs></svg>
 
 
@@ -378,19 +395,20 @@
       </div>
 
       <div class="bk-hero">
-        <div class="orb" style="width:140px;height:140px;background:rgba(255,255,255,.13);right:-40px;top:-40px"></div>
-        <div class="orb" style="width:70px;height:70px;background:rgba(255,255,255,.1);right:34px;bottom:-28px"></div>
-        <div class="slogo">SFC</div>
-        <div class="sm">斯芬克 2026 OFFER</div>
-        <div class="lg">本科 录取榜单</div>
-        <div class="bstats">
-          <div><div class="k">新获 offer</div><div class="v">5326<small> 枚+</small></div></div>
-          <div><div class="k">累计奖学金约(人民币)</div><div class="v">2.5<small> 亿</small></div></div>
+        <div class="bk-art" aria-hidden="true">
+          <div class="sh-blob"></div>
+          <div class="sh-tri-o"></div>
+          <svg class="sh-squig" viewBox="0 0 54 70" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M8 8c14 6 14 16 0 22s-14 16 0 22 14 16 0 18"/></svg>
+          <div class="sh-ball">本科</div>
+          <div class="sh-tri-y"></div>
         </div>
-        <div class="badge">本科</div>
+        <div class="slogo"><b>SFK</b><small>INTERNATIONAL<br>ART EDUCATION</small><em>斯芬克</em></div>
+        <div class="sm">斯芬克2026offer</div>
+        <div class="lg">本科 录取榜单</div>
+        <div class="bk-stat"><div class="k">新获offer</div><div class="v">5327<small>枚+</small></div></div>
+        <div class="bk-stat"><div class="k">累计奖学金约(人民币)</div><div class="v">2.5<small>亿</small></div></div>
+        <div class="bk-cut">数据截止：<br>2026年10月30日 北京时间16:56</div>
       </div>
-
-      <div class="meta">数据截止：2026年10月29日 北京时间 14:41</div>
 
       <div class="ivy tap" data-go="p3">
         <div style="flex:1">
@@ -398,6 +416,11 @@
           <div class="s">美本 TOP30 · 英国 G5 · 港前三</div>
         </div>
         <div class="go"><svg class="ic"><use href="#i-right"/></svg></div>
+      </div>
+
+      <div class="bk-dock">
+        <div class="bk-fab tap" id="bkDl" title="下载"><svg class="ic"><use href="#i-dl"/></svg></div>
+        <div class="bk-fab tap" id="bkShare" title="分享"><svg class="ic"><use href="#i-out"/></svg></div>
       </div>
 
       <div class="bk-sec" id="bkSecs"></div>
@@ -847,11 +870,11 @@ var BK_SEC = [
   ]}
 ];
 document.getElementById('bkSecs').innerHTML = BK_SEC.map(function(s){
-  return '<div class="bk-card">' +
+  return '<div class="bk-block">' +
     '<div class="sh">' + s.k + '院校录取OFFER达 <em>' + s.n + '</em> 枚+</div>' +
     '<div class="ss">部分院校 OFFER 数据</div>' +
     '<div class="g4">' + s.rows.map(function(r){
-      return '<div class="g"><div class="nm">' + r[0] + '</div><div class="v">' + r[1] + '</div><div class="u">枚</div></div>';
+      return '<div class="g"><div class="nm">' + r[0] + '</div><div class="v">' + String(r[1]).replace(/\+$/,'') + '</div><div class="u">枚</div></div>';
     }).join('') + '</div></div>';
 }).join('');
 
@@ -901,6 +924,12 @@ function openPoster(){
 
 document.getElementById('fabDl').addEventListener('click', openPoster);
 document.getElementById('fabShare').addEventListener('click', function(){
+  toast('已唤起分享面板，可转发给微信好友（原型演示）');
+});
+document.getElementById('bkDl').addEventListener('click', function(){
+  toast('榜单长图已保存到相册（原型演示）');
+});
+document.getElementById('bkShare').addEventListener('click', function(){
   toast('已唤起分享面板，可转发给微信好友（原型演示）');
 });
 document.getElementById('pClose').addEventListener('click', function(){
