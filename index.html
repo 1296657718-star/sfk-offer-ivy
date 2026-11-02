@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261102-111251">
+<meta name="x-build" content="20261102-182732">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -133,7 +133,7 @@
   .g4 .g .u { font-size:12px; color:#E1063A; font-weight:700; margin-top:1px; }
   .meta { font-size:9.5px; color:#AAA; padding:9px 14px 4px; }
 
-  .bk-dock { position:sticky; top:300px; z-index:18; height:0; pointer-events:none; }
+  .bk-dock { position:sticky; top:480px; z-index:18; height:0; pointer-events:none; }
   .bk-fab { pointer-events:auto; position:absolute; right:6px; top:-92px; width:34px; height:34px; border-radius:7px; background:#7B46F2; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(70,30,170,.25); cursor:pointer; }
   .bk-fab + .bk-fab { top:-50px; }
   .bk-fab .ic { width:18px; height:18px; stroke-width:1.8; }
@@ -150,8 +150,10 @@
   .pool-h { display:flex; align-items:baseline; justify-content:space-between; padding:22px 14px 0; }
   .pool-h .n { font-size:15.5px; font-weight:800; letter-spacing:.5px; }
   .pool-h .c { font-size:11.5px; color:#B32DA8; font-weight:700; }
-  .rank-tip { font-size:10.5px; color:#E8355E; padding:4px 14px 0; font-weight:400; }
-  .ivy-note { font-size:11px; color:#888; padding:14px 14px 0; line-height:1.6; }
+  .year-pick { position:absolute; right:14px; top:18px; z-index:3; }
+  .year-pick select { appearance:none; -webkit-appearance:none; font-size:12px; font-weight:700; color:#fff; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:6px 24px 6px 13px; outline:none; letter-spacing:.5px; }
+  .year-pick select option { color:#333; }
+  .year-pick .arr { position:absolute; right:11px; top:50%; transform:translateY(-54%); font-size:9px; color:#fff; pointer-events:none; }
   .seg { display:flex; background:#F5F5F7; border-radius:10px; margin:12px 14px 0; padding:3px; }
   .seg .sg { flex:1; text-align:center; padding:9px 0; font-size:13px; color:#666; border-radius:8px; cursor:pointer; }
   .seg .sg.on { background:#fff; color:#E8355E; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.08); }
@@ -412,7 +414,7 @@
 
       <div class="ivy tap" data-go="p3">
         <div style="flex:1">
-          <div class="h">2026 爬藤战绩</div>
+          <div class="h">爬藤战绩</div>
           <div class="s">美本 TOP30 · 英国 G5 · 港前三</div>
         </div>
         <div class="go"><svg class="ic"><use href="#i-right"/></svg></div>
@@ -440,7 +442,7 @@
 
       <div style="background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 55%,#E86A9B 100%); color:#fff; padding:20px 14px 22px; position:relative; overflow:hidden;">
         <div class="orb" style="width:120px;height:120px;background:rgba(255,255,255,.12);right:-34px;top:-20px"></div>
-        <div style="font-size:11px;opacity:.9;letter-spacing:1px">2026 OFFER</div>
+        <div class="year-pick"><select id="ivyYearSel" aria-label="选择申请季"></select><span class="arr">▾</span></div>
         <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">爬藤战绩</div>
         <div style="font-size:11px;opacity:.88;margin-top:6px">冲刺世界顶尖名校 · 本科录取</div>
       </div>
@@ -452,7 +454,6 @@
 
       <div class="meta">数据截止 2026年10月22日 北京时间 14:41 · 统计口径：2026 申请季本科录取 offer</div>
 
-      <div class="ivy-note">美本按 US News 名次排列。英国、中国香港、新加坡按 QS 名次排列。</div>
       <div class="seg" id="regionSeg">
         <div class="sg on" data-region="us">美本</div>
         <div class="sg" data-region="ukhk">英国 · 港新</div>
@@ -575,7 +576,7 @@
         <div><span class="sch-count" id="schCount">1+</span></div>
         <div class="sch-logo" id="schLogo">Y</div>
         <div class="sch-name" id="schName">耶鲁大学</div>
-        <div class="sch-rank" id="schRank">US News 5</div>
+        <div class="sch-rank" id="schRank">US News 4(并列)</div>
         <div class="sch-acts">
           <div class="sact tap" id="actFav">♡ 收藏</div>
           <div class="sact tap" id="actGuide">申请指导</div>
@@ -687,7 +688,7 @@
   </div>
 </div>
 
-<div class="hint">榜单列表 →「本科」卡 →「2026 爬藤战绩」→「预约 1v1 选校评估」→ 联动小程序原生「智能选校」</div>
+<div class="hint">榜单列表 →「本科」卡 →「爬藤战绩」→「预约 1v1 选校评估」→ 联动小程序原生「智能选校」</div>
 
 <script>
 // 热门排行榜示例数据，行尾 4 项为筛选标签：[国家, 科系, 专业, 学位]
@@ -713,51 +714,91 @@ const RANK = [
 
 
 // 爬藤榜单：以下为示例数据（数字均为演示用，非真实统计）
-// 美本按 US News 名次排列（艺术类院校无 US News 综排，附后并标注 QS 艺术与设计学科排名）
-// 英国、中国香港、新加坡按 QS 名次排列，榜单行只显示 QS 排名（USNews 字段保留备用）
+// 美本按 US News 2026 名次排列（艺术类院校显示 US News 艺术学科榜名次；帕森斯、普瑞特未进该榜，显示 QS 艺术与设计学科排名）
+// 英国、中国香港、新加坡按 QS 2027 名次排列，榜单行只显示 QS 排名（USNews 字段保留备用）
 // 行格式：[序号(渲染时自动重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
+// 年度筛选器（下拉滚动选择）：仅做切换交互；各年度 offer 数据暂未接入，
+// 后续年度数据就绪后扩展 IVY_YEARS 并在 change 回调里按年渲染 IVY_DATA 即可。
+var IVY_YEARS = ['2025','2026','2027'];
+var curIvyYear = '2026';
+(function initIvyYear(){
+  var sel = document.getElementById('ivyYearSel'); if(!sel) return;
+  sel.innerHTML = IVY_YEARS.map(function(y){
+    return '<option value="' + y + '"' + (y === curIvyYear ? ' selected' : '') + '>' + y + ' 申请季</option>';
+  }).join('');
+  sel.addEventListener('change', function(){ curIvyYear = sel.value; });
+})();
+
 var IVY_DATA = {
+  // 排名口径：美本 = US News 2026（综合类 TOP30 / 艺术类 Fine Arts 榜）；英国·港新 = QS World University Rankings 2027
+  // 行格式：[序号(渲染时重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
+  // 注意：新增院校的 offer 数为占位数字，待替换真实数据；QS 列未核到 2027 数据的填 —
   us: { rows: [
     ['','普林斯顿大学','1+','#E77500','P',1,22,'哈耶普斯麻'],
     ['','麻省理工学院','1+','#8A8B8C','M',2,1,'哈耶普斯麻'],
     ['','哈佛大学','1+','#A51C30','H',3,5,'哈耶普斯麻'],
-    ['','斯坦福大学','2+','#8C1515','S',4,3,'哈耶普斯麻'],
-    ['','耶鲁大学','2+','#00356B','Y',5,41,'哈耶普斯麻'],
-    ['','加州理工学院','1+','#FF6C0C','C',6,10,'TOP30综合类'],
-    ['','杜克大学','4+','#012169','D',6,45,'TOP30综合类'],
-    ['','约翰霍普金斯大学','13+','#002D72','J',6,26,'TOP30综合类'],
-    ['','西北大学','2+','#4E2A84','N',6,42,'TOP30综合类'],
-    ['','宾夕法尼亚大学','4+','#011F5B','P',10,11,'TOP30综合类'],
-    ['','康奈尔大学','7+','#B31B1B','C',11,16,'TOP30综合类'],
-    ['','哥伦比亚大学','5+','#1D4F91','C',13,34,'TOP30综合类'],
-    ['','布朗大学','3+','#4E3629','B',13,73,'TOP30综合类'],
-    ['','达特茅斯学院','1+','#00693E','D',15,37,'TOP30综合类'],
-    ['','密歇根安娜堡分校','6+','#00274C','M',21,44,'TOP30综合类'],
-    ['','卡内基梅隆大学','9+','#C41230','C',21,58,'TOP30综合类'],
-    ['','南加州大学','44+','#990000','S',27,127,'TOP30综合类'],
-    ['','纽约大学','8+','#57068C','N',30,43,'TOP30综合类'],
+    ['','斯坦福大学','2+','#8C1515','S','4(并列)',3,'哈耶普斯麻'],
+    ['','耶鲁大学','2+','#00356B','Y','4(并列)',41,'哈耶普斯麻'],
+    ['','芝加哥大学','5+','#800000','C',6,'—','TOP30综合类'],
+    ['','杜克大学','4+','#012169','D','7(并列)',45,'TOP30综合类'],
+    ['','约翰霍普金斯大学','13+','#002D72','J','7(并列)',26,'TOP30综合类'],
+    ['','西北大学','2+','#4E2A84','N','7(并列)',42,'TOP30综合类'],
+    ['','宾夕法尼亚大学','4+','#011F5B','P','7(并列)',11,'TOP30综合类'],
+    ['','加州理工学院','1+','#FF6C0C','C',11,10,'TOP30综合类'],
+    ['','康奈尔大学','7+','#B31B1B','C',12,16,'TOP30综合类'],
+    ['','布朗大学','3+','#4E3629','B','13(并列)',73,'TOP30综合类'],
+    ['','达特茅斯学院','1+','#00693E','D','13(并列)',37,'TOP30综合类'],
+    ['','哥伦比亚大学','5+','#1D4F91','C','15(并列)',34,'TOP30综合类'],
+    ['','加州大学伯克利分校','11+','#003262','B','15(并列)','—','TOP30综合类'],
+    ['','莱斯大学','3+','#00256A','R','17(并列)','—','TOP30综合类'],
+    ['','加州大学洛杉矶分校','17+','#2D68C4','U','17(并列)','—','TOP30综合类'],
+    ['','范德堡大学','4+','#866D4B','V','17(并列)','—','TOP30综合类'],
+    ['','卡内基梅隆大学','9+','#C41230','C','20(并列)',58,'TOP30综合类'],
+    ['','密歇根安娜堡分校','6+','#00274C','M','20(并列)',44,'TOP30综合类'],
+    ['','圣母大学','2+','#0C2340','N','20(并列)','—','TOP30综合类'],
+    ['','圣路易斯华盛顿大学','5+','#A51417','W','20(并列)','—','TOP30综合类'],
+    ['','埃默里大学','6+','#012D6B','E','24(并列)','—','TOP30综合类'],
+    ['','乔治城大学','4+','#041E42','G','24(并列)','—','TOP30综合类'],
+    ['','北卡罗来纳大学教堂山分校','3+','#4B9CD3','U','26(并列)','—','TOP30综合类'],
+    ['','弗吉尼亚大学','5+','#232D4B','V','26(并列)','—','TOP30综合类'],
+    ['','南加州大学','44+','#990000','S',28,127,'TOP30综合类'],
+    ['','加州大学圣地亚哥分校','9+','#00629B','U',29,'—','TOP30综合类'],
+    ['','佛罗里达大学','7+','#0021A5','F','30(并列)','—','TOP30综合类'],
+    ['','德克萨斯大学奥斯汀分校','8+','#BF5700','T','30(并列)','—','TOP30综合类'],
+    ['','罗德岛设计学院','5+','#3B5BA5','R','2(并列)','—','TOP30艺术类'],
+    ['','弗吉尼亚联邦大学','3+','#F8B300','V','2(并列)','—','TOP30艺术类'],
+    ['','芝加哥艺术学院','6+','#B08D3E','A',6,'—','TOP30艺术类'],
+    ['','加州艺术学院','4+','#D2232A','C',7,'—','TOP30艺术类'],
+    ['','罗格斯大学新布朗斯维克分校','2+','#CC0033','R','8(并列)','—','TOP30艺术类'],
+    ['','阿尔弗雷德大学纽约州立陶瓷学院','1+','#6C2E9C','A','11(并列)','—','TOP30艺术类'],
+    ['','克兰布鲁克艺术学院','1+','#2E5A88','C','11(并列)','—','TOP30艺术类'],
+    ['','纽约市立大学亨特学院','2+','#333F48','H','14(并列)','—','TOP30艺术类'],
+    ['','纽约大学','8+','#57068C','N','14(并列)','—','TOP30艺术类'],
+    ['','纽约视觉艺术学院','7+','#C8102E','S','14(并列)','—','TOP30艺术类'],
+    ['','天普大学','3+','#9E1B34','T','14(并列)','—','TOP30艺术类'],
+    ['','威斯康星大学麦迪逊分校','4+','#C5050C','W','14(并列)','—','TOP30艺术类'],
     ['','帕森斯设计学院','9+','#222222','P','—',2,'TOP30艺术类'],
-    ['','罗德岛设计学院','5+','#3B5BA5','R','—',4,'TOP30艺术类'],
-    ['','芝加哥艺术学院','6+','#B08D3E','A','—',7,'TOP30艺术类'],
     ['','普瑞特艺术学院','4+','#5F8F4E','P','—',8,'TOP30艺术类']
   ]},
   ukhk: { rows: [
     ['','帝国理工学院','22+','#003E74','I',100,2,'G5'],
     ['','牛津大学','5+','#002147','O',5,4,'G5'],
     ['','剑桥大学','7+','#A3C1AD','C',6,6,'G5'],
-    ['','新加坡国立大学','15+','#003D7C','N',33,8,''],
-    ['','伦敦大学学院','38+','#002248','U',22,9,'G5'],
+    ['','伦敦大学学院','38+','#002248','U',22,8,'G5'],
+    ['','新加坡国立大学','15+','#003D7C','N',33,10,''],
     ['','香港大学','32+','#006F51','H',44,11,'港八大'],
     ['','南洋理工大学','9+','#B4273B','T',48,12,''],
-    ['','香港中文大学','24+','#7A2E8E','C',53,32,'港八大'],
-    ['','香港科技大学','18+','#003D7C','S',66,36,'港八大'],
-    ['','伦敦政经学院','24+','#E30613','L',236,56,'G5'],
-    ['','香港城市大学','12+','#00876C','C',110,63,'港八大'],
-    ['','香港理工大学','15+','#A02337','P',120,66,'港八大'],
-    ['','香港浸会大学','6+','#27408B','B',350,254,'港八大'],
-    ['','香港岭南大学','3+','#2E6BE8','L',520,545,'港八大']
+    ['','香港中文大学','24+','#7A2E8E','C',53,18,'港八大'],
+    ['','香港科技大学','18+','#003D7C','S',66,33,'港八大'],
+    ['','香港理工大学','15+','#A02337','P',120,50,'港八大'],
+    ['','香港城市大学','12+','#00876C','C',110,52,'港八大'],
+    ['','伦敦政经学院','24+','#E30613','L',236,62,'G5'],
+    ['','香港浸会大学','6+','#27408B','B',350,216,'港八大'],
+    ['','香港教育大学','4+','#6E267B','E','—',406,'港八大'],
+    ['','香港岭南大学','3+','#2E6BE8','L',520,581,'港八大']
   ]}
 };
+
 var GROUPS = {
   us:   ['全部','哈耶普斯麻','TOP30综合类','TOP30艺术类'],
   ukhk: ['全部','港八大','G5']
@@ -794,13 +835,12 @@ function renderIvy(){
   var label = RGN_LABEL[curRegion] + (curGroup === '全部' ? '' : ' · ' + curGroup);
   var rows = ivyFilteredRows();
   var html = '<div class="pool-h"><div class="n">' + label + '</div>' +
-             '<div class="c">' + (rows.length ? '共 ' + rows.length + ' 所' : '') + '</div></div>' +
-             (rows.length ? '<div class="rank-tip">（点击查看院校 offer 详情）</div>' : '');
+             '<div class="c">' + (rows.length ? '共 ' + rows.length + ' 所' : '') + '</div></div>';
   if(rows.length){
     html += rows.map(function(r, i){
       var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
       // 美本显示 US News 排名（艺术类院校无综排，显示 QS 艺术学科排名）；英国·港新显示 QS 排名
-      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], curRegion === 'us' ? 'us' : 'qs');
+      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6], r[7]], curRegion === 'us' ? 'us' : 'qs');
     }).join('');
   } else {
     html += '<div class="reserved"><div class="t">榜单数据待补充</div>' +
@@ -815,7 +855,11 @@ function renderIvy(){
 
 function rankRow(r, mode){
   var rk;
-  if(mode === 'us'){ rk = (r[5] === '—') ? ('QS 艺术学科 ' + r[6]) : ('US News ' + r[5]); }
+  if(mode === 'us'){
+    if(r[5] === '—'){ rk = 'QS 艺术学科 ' + r[6]; }
+    else if(r[7] === 'TOP30艺术类'){ rk = 'US News 艺术 ' + r[5]; }
+    else { rk = 'US News ' + r[5]; }
+  }
   else if(mode === 'qs'){ rk = 'QS ' + r[6]; }
   else { rk = 'USNews ' + r[5] + ' · QS ' + r[6]; }
   return '<div class="rank"><div class="no">' + r[0] + '</div>' +
@@ -912,7 +956,7 @@ function openPoster(){
   document.getElementById('pSub').textContent = label + ' · 共 ' + rows.length + ' 所';
   document.getElementById('pRows').innerHTML = rows.slice(0, 8).map(function(r, i){
     var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
-    return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], curRegion === 'us' ? 'us' : 'qs');
+    return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6], r[7]], curRegion === 'us' ? 'us' : 'qs');
   }).join('');
   document.getElementById('pmodal').className = 'pmodal show';
 }
@@ -1015,7 +1059,8 @@ function openSchool(row){
   document.getElementById('schLogo').style.color = row[3];
   document.getElementById('schName').textContent = row[1];
   document.getElementById('schRank').textContent = curRegion === 'us'
-    ? ((row[5] === '—') ? ('QS 艺术学科 ' + row[6]) : ('US News ' + row[5]))
+    ? ((row[5] === '—') ? ('QS 艺术学科 ' + row[6])
+       : (row[7] === 'TOP30艺术类' ? ('US News 艺术 ' + row[5]) : ('US News ' + row[5])))
     : ('QS ' + row[6]);
   var fav = document.getElementById('actFav');
   fav.className = 'sact tap'; fav.textContent = '♡ 收藏';
