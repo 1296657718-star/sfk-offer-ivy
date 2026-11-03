@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261103-140152">
+<meta name="x-build" content="20261103-143900">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -150,10 +150,6 @@
   .pool-h { display:flex; align-items:baseline; justify-content:space-between; padding:22px 14px 0; }
   .pool-h .n { font-size:15.5px; font-weight:800; letter-spacing:.5px; }
   .pool-h .c { font-size:11.5px; color:#B32DA8; font-weight:700; }
-  .year-pick { position:absolute; right:14px; top:18px; z-index:3; }
-  .year-pick select { appearance:none; -webkit-appearance:none; font-size:12px; font-weight:700; color:#fff; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.55); border-radius:999px; padding:6px 24px 6px 13px; outline:none; letter-spacing:.5px; }
-  .year-pick select option { color:#333; }
-  .year-pick .arr { position:absolute; right:11px; top:50%; transform:translateY(-54%); font-size:9px; color:#fff; pointer-events:none; }
   .seg { display:flex; background:#F5F5F7; border-radius:10px; margin:12px 14px 0; padding:3px; }
   .seg .sg { flex:1; text-align:center; padding:9px 0; font-size:13px; color:#666; border-radius:8px; cursor:pointer; }
   .seg .sg.on { background:#fff; color:#E8355E; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.08); }
@@ -442,7 +438,6 @@
 
       <div style="background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 55%,#E86A9B 100%); color:#fff; padding:20px 14px 22px; position:relative; overflow:hidden;">
         <div class="orb" style="width:120px;height:120px;background:rgba(255,255,255,.12);right:-34px;top:-20px"></div>
-        <div class="year-pick"><select id="ivyYearSel" aria-label="选择申请季"></select><span class="arr">▾</span></div>
         <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">爬藤战绩</div>
         <div style="font-size:11px;opacity:.88;margin-top:6px">冲刺世界顶尖名校 · 本科录取</div>
       </div>
@@ -717,18 +712,6 @@ const RANK = [
 // 美本按 US News 2026 名次排列（艺术类院校显示 US News 艺术学科榜名次；帕森斯、普瑞特未进该榜，显示 QS 艺术与设计学科排名）
 // 英国、中国香港、新加坡按 QS 2027 名次排列，榜单行只显示 QS 排名（USNews 字段保留备用）
 // 行格式：[序号(渲染时自动重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
-// 年度筛选器（下拉滚动选择）：仅做切换交互；各年度 offer 数据暂未接入，
-// 后续年度数据就绪后扩展 IVY_YEARS 并在 change 回调里按年渲染 IVY_DATA 即可。
-var IVY_YEARS = ['2025','2026','2027'];
-var curIvyYear = '2026';
-(function initIvyYear(){
-  var sel = document.getElementById('ivyYearSel'); if(!sel) return;
-  sel.innerHTML = IVY_YEARS.map(function(y){
-    return '<option value="' + y + '"' + (y === curIvyYear ? ' selected' : '') + '>' + y + ' 申请季</option>';
-  }).join('');
-  sel.addEventListener('change', function(){ curIvyYear = sel.value; });
-})();
-
 var IVY_DATA = {
   // 排名口径：美本 = US News 2026（综合类 TOP30 / 艺术类 Fine Arts 榜）；英国·港新 = QS World University Rankings 2027
   // 行格式：[序号(渲染时重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
