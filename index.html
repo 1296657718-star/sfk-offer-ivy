@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261103-143900">
+<meta name="x-build" content="20261103-183418">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -94,6 +94,8 @@
   .rank { display:flex; align-items:center; padding:11px 14px; border-bottom:1px solid #F4F4F4; }
   .rank .no { width:26px; font-size:13px; color:#BBB; font-weight:600; font-style:italic; }
   .rlogo { width:34px; height:34px; border-radius:50%; background:#fff; border:1px solid #EDEDED; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:800; flex:0 0 34px; }
+  .rlogo.imgv { border-radius:6px; padding:3px; }
+  .rlogo.imgv img { width:100%; height:100%; object-fit:contain; display:block; }
   .rname { flex:1; font-size:12.5px; margin-left:10px; line-height:1.35; color:#333; }
   .rname .rk { display:block; font-size:9px; color:#AAA; font-weight:400; margin-top:2px; letter-spacing:.3px; }
   .rside { text-align:right; }
@@ -686,6 +688,17 @@
 <div class="hint">榜单列表 →「本科」卡 →「爬藤战绩」→「预约 1v1 选校评估」→ 联动小程序原生「智能选校」</div>
 
 <script>
+// 热门排行榜校徽（2026-11-03）：前 6 名配真实校徽图（维基百科官方 seal/shield，128px PNG），
+// 落在 img/logos/ 随版本推送；未配置的学校自动回退首字母圆标。
+const RLOGO_MAP = {
+  '斯坦福大学': 'img/logos/stanford.png',
+  '耶鲁大学': 'img/logos/yale.png',
+  '康奈尔大学': 'img/logos/cornell.png',
+  '哥伦比亚大学': 'img/logos/columbia.png',
+  '宾夕法尼亚大学': 'img/logos/upenn.png',
+  '约翰霍普金斯大学': 'img/logos/jhu.png'
+};
+
 // 热门排行榜示例数据，行尾 4 项为筛选标签：[国家, 科系, 专业, 学位]
 const RANK = [
   ['01','斯坦福大学','1+','#8C1515','S',4,3,'美国','工业交互','交互设计','本科'],
@@ -846,8 +859,11 @@ function rankRow(r, mode){
   else if(mode === 'qs'){ rk = 'QS ' + r[6]; }
   else if(mode === 'none'){ rk = ''; }
   else { rk = 'USNews ' + r[5] + ' · QS ' + r[6]; }
+  var lg = RLOGO_MAP[r[1]];
   return '<div class="rank"><div class="no">' + r[0] + '</div>' +
-    '<div class="rlogo" style="color:' + r[3] + '">' + r[4] + '</div>' +
+    (lg
+      ? '<div class="rlogo imgv"><img src="' + lg + '" alt="' + r[1] + '校徽"></div>'
+      : '<div class="rlogo" style="color:' + r[3] + '">' + r[4] + '</div>') +
     '<div class="rname">' + r[1] + (rk ? '<span class="rk">' + rk + '</span>' : '') + '</div>' +
     '<div class="rside"><div class="k">offer数</div><div class="v">' + r[2] + '</div></div></div>';
 }
@@ -1396,70 +1412,83 @@ applyFilters();
 
   var NS = 'http://www.w3.org/2000/svg';
   var KEY = 'sfk_proto_notes_v3';
-  var PRESET_V = 10;
+  var PRESET_V = 11;
 
   /* 常驻批注清单写在原型右侧画布空白处，每条带 page 字段，只跟着所属页面走。
      新增：加条目 + PRESET_V +1；下线：把 id 放进 DROPPED_IDS，老浏览器数据会自动剔除。
      anchor：批注贴合的原型元素选择器；out:true 表示贴到手机右侧外面；dy 纵向微调；w 便签宽度。 */
-  var PRESET_NOTES = [
-    { id: 'pn-rank-major', page: 'p1', w: 224,
-      text: '【热门排行榜】部分新增的专业数据，来源从【offer 后台】的【offer 列表】中调取，并且把专业和科系对应。',
-      anchor: '#rankHead', out: true, gap: 46, dy: -2 },
-    { id: 'pn-fab-dl-share', page: 'p3', w: 236,
-      text: '下载按钮：直接下载榜单长图到相册（和之前形式一致）。\n分享按钮：直接弹出选择聊天进行分享，配置分享海报。',
-      anchor: '#fabDl', out: true, gap: 34, dy: -12 },
-    { id: 'pn-ivy-region', page: 'p3', w: 224,
-      text: '爬藤榜单的国家包含美本和英国＋港新。',
-      anchor: '#regionSeg', out: true, gap: 34, dy: -6 },
-    { id: 'pn-cta-ai', page: 'p3', w: 236,
-      text: '点击【1v1选校评估】直接调用【AI智能选校】模块。',
-      anchor: '.cta', out: true, gap: 34, dy: -2 },
-    { id: 'pn-ivy-data-src', page: 'p3', w: 236,
-      text: '爬藤的榜单的数据来自于【offer后台】的【offer列表】中的数据，院校排名提供院校排名信息库。',
-      anchor: '#regionSeg', out: true, side: 'left', gap: 26, dy: -2 },
-    { id: 'pn-p2-ivy', page: 'p2', w: 224,
-      text: '只添加【2026爬藤战绩】板块，其他不变。',
-      anchor: '#p2 .ivy', out: true, gap: 46, dy: -2 },
-    { id: 'pn-p1-ug-ivy', page: 'p1', w: 224,
-      text: '将【2026爬藤榜单】增加在本科模块中，其余不变。',
-      anchor: '.gcard.g-ug', out: true, gap: 46, dy: -2 },
-    { id: 'pn-p6-wall-src', page: 'p6', w: 224,
-      text: '数据来源于【offer后台】，与offer榜单中的形式保持一致。',
-      anchor: '#wallBox', out: true, gap: 46, dy: -2 }
-  ];
-  var PRESET_SHAPES = [
-    { id: 'ps-rank-arrow', page: 'p1', type: 'arrow',
-      a1: '#rankHead', from: 'right', to: 'left', a2: '.note[data-id="pn-rank-major"]' },
-    { id: 'ps-fab-arrow', page: 'p3', type: 'arrow',
-      a1: '#fabDl', from: 'right', to: 'left', a2: '.note[data-id="pn-fab-dl-share"]' },
-    { id: 'ps-region-arrow', page: 'p3', type: 'arrow',
-      a1: '#regionSeg', from: 'right', to: 'left', a2: '.note[data-id="pn-ivy-region"]' },
-    { id: 'ps-cta-arrow', page: 'p3', type: 'arrow',
-      a1: '.cta', from: 'right', to: 'left', a2: '.note[data-id="pn-cta-ai"]' },
-    { id: 'ps-datasrc-arrow', page: 'p3', type: 'arrow',
-      a1: '.note[data-id="pn-ivy-data-src"]', from: 'right', to: 'left', a2: '#regionSeg' },
-    { id: 'ps-p2-ivy-arrow', page: 'p2', type: 'arrow',
-      a1: '#p2 .ivy', from: 'right', to: 'left', a2: '.note[data-id="pn-p2-ivy"]' },
-    { id: 'ps-p1-ug-arrow', page: 'p1', type: 'arrow',
-      a1: '.gcard.g-ug', from: 'right', to: 'left', a2: '.note[data-id="pn-p1-ug-ivy"]' },
-    { id: 'ps-p6-wall-arrow', page: 'p6', type: 'arrow',
-      a1: '#wallBox', from: 'right', to: 'left', a2: '.note[data-id="pn-p6-wall-src"]' }
-  ];
+  /* 2026-11-03 用户要求：全部标注（便签 / 引注箭头 / 参考截图贴图）从原型里去除。
+     以下为原清单存档，恢复时把下面注释块解开、内容填回 PRESET_NOTES / PRESET_SHAPES 即可。
+     PRESET_V 已由 10 提到 11，并把所有旧 id 放进 DROPPED_IDS，老浏览器里的残留批注会被自动清掉。
+  // var PRESET_NOTES = [
+  //   { id: 'pn-rank-major', page: 'p1', w: 224,
+  //     text: '【热门排行榜】部分新增的专业数据，来源从【offer 后台】的【offer 列表】中调取，并且把专业和科系对应。',
+  //     anchor: '#rankHead', out: true, gap: 46, dy: -2 },
+  //   { id: 'pn-fab-dl-share', page: 'p3', w: 236,
+  //     text: '下载按钮：直接下载榜单长图到相册（和之前形式一致）。\n分享按钮：直接弹出选择聊天进行分享，配置分享海报。',
+  //     anchor: '#fabDl', out: true, gap: 34, dy: -12 },
+  //   { id: 'pn-ivy-region', page: 'p3', w: 224,
+  //     text: '爬藤榜单的国家包含美本和英国＋港新。',
+  //     anchor: '#regionSeg', out: true, gap: 34, dy: -6 },
+  //   { id: 'pn-cta-ai', page: 'p3', w: 236,
+  //     text: '点击【1v1选校评估】直接调用【AI智能选校】模块。',
+  //     anchor: '.cta', out: true, gap: 34, dy: -2 },
+  //   { id: 'pn-ivy-data-src', page: 'p3', w: 236,
+  //     text: '爬藤的榜单的数据来自于【offer后台】的【offer列表】中的数据，院校排名提供院校排名信息库。',
+  //     anchor: '#regionSeg', out: true, side: 'left', gap: 26, dy: -2 },
+  //   { id: 'pn-p2-ivy', page: 'p2', w: 224,
+  //     text: '只添加【2026爬藤战绩】板块，其他不变。',
+  //     anchor: '#p2 .ivy', out: true, gap: 46, dy: -2 },
+  //   { id: 'pn-p1-ug-ivy', page: 'p1', w: 224,
+  //     text: '将【2026爬藤榜单】增加在本科模块中，其余不变。',
+  //     anchor: '.gcard.g-ug', out: true, gap: 46, dy: -2 },
+  //   { id: 'pn-p6-wall-src', page: 'p6', w: 224,
+  //     text: '数据来源于【offer后台】，与offer榜单中的形式保持一致。',
+  //     anchor: '#wallBox', out: true, gap: 46, dy: -2 }
+  // ];
+  // var PRESET_SHAPES = [
+  //   { id: 'ps-rank-arrow', page: 'p1', type: 'arrow',
+  //     a1: '#rankHead', from: 'right', to: 'left', a2: '.note[data-id="pn-rank-major"]' },
+  //   { id: 'ps-fab-arrow', page: 'p3', type: 'arrow',
+  //     a1: '#fabDl', from: 'right', to: 'left', a2: '.note[data-id="pn-fab-dl-share"]' },
+  //   { id: 'ps-region-arrow', page: 'p3', type: 'arrow',
+  //     a1: '#regionSeg', from: 'right', to: 'left', a2: '.note[data-id="pn-ivy-region"]' },
+  //   { id: 'ps-cta-arrow', page: 'p3', type: 'arrow',
+  //     a1: '.cta', from: 'right', to: 'left', a2: '.note[data-id="pn-cta-ai"]' },
+  //   { id: 'ps-datasrc-arrow', page: 'p3', type: 'arrow',
+  //     a1: '.note[data-id="pn-ivy-data-src"]', from: 'right', to: 'left', a2: '#regionSeg' },
+  //   { id: 'ps-p2-ivy-arrow', page: 'p2', type: 'arrow',
+  //     a1: '#p2 .ivy', from: 'right', to: 'left', a2: '.note[data-id="pn-p2-ivy"]' },
+  //   { id: 'ps-p1-ug-arrow', page: 'p1', type: 'arrow',
+  //     a1: '.gcard.g-ug', from: 'right', to: 'left', a2: '.note[data-id="pn-p1-ug-ivy"]' },
+  //   { id: 'ps-p6-wall-arrow', page: 'p6', type: 'arrow',
+  //     a1: '#wallBox', from: 'right', to: 'left', a2: '.note[data-id="pn-p6-wall-src"]' }
+  // ];
+  */
+  var PRESET_NOTES = [];
+  var PRESET_SHAPES = [];
   /* 已下线的旧批注 id（老数据升级时自动清除） */
-  var DROPPED_IDS = ['pn-dept-major', 'ps-box', 'ps-arrow'];
+  var DROPPED_IDS = ['pn-dept-major', 'ps-box', 'ps-arrow',
+    'pn-rank-major', 'pn-fab-dl-share', 'pn-ivy-region', 'pn-cta-ai', 'pn-ivy-data-src',
+    'pn-p2-ivy', 'pn-p1-ug-ivy', 'pn-p6-wall-src',
+    'ps-rank-arrow', 'ps-fab-arrow', 'ps-region-arrow', 'ps-cta-arrow', 'ps-datasrc-arrow',
+    'ps-p2-ivy-arrow', 'ps-p1-ug-arrow', 'ps-p6-wall-arrow'];
 
   /* 常驻贴图：同样带 page 只跟所属页面走，out:true 贴手机右侧空白。
      src 用 dataURL 直接嵌在文件里（不依赖外部图片、不进 localStorage）。 */
-  var PRESET_IMGS = [
-    { id: 'pi-offer-list', page: 'p1', w: 600,
-      alt: 'offer后台 · offer列表（申请科系 / 录取专业字段）',
-      anchor: '.note[data-id="pn-rank-major"]', out: true, gap: 46, dy: 120,
-      src: 'img/pi-offer-list.jpg' },
-    { id: 'pi-p2-ivy-orig', page: 'p2', w: 300,
-      alt: '原版小程序 · 本科 录取榜单页',
-      anchor: '.note[data-id="pn-p2-ivy"]', out: true, gap: 46, dy: 118,
-      src: 'img/pi-p2-ivy-orig.jpg' }
-  ];
+  /* 参考截图贴图同步清空（它们锚定在已删除的便签上）。原文存档：
+  // var PRESET_IMGS = [
+  //   { id: 'pi-offer-list', page: 'p1', w: 600,
+  //     alt: 'offer后台 · offer列表（申请科系 / 录取专业字段）',
+  //     anchor: '.note[data-id="pn-rank-major"]', out: true, gap: 46, dy: 120,
+  //     src: 'img/pi-offer-list.jpg' },
+  //   { id: 'pi-p2-ivy-orig', page: 'p2', w: 300,
+  //     alt: '原版小程序 · 本科 录取榜单页',
+  //     anchor: '.note[data-id="pn-p2-ivy"]', out: true, gap: 46, dy: 118,
+  //     src: 'img/pi-p2-ivy-orig.jpg' }
+  // ];
+  */
+  var PRESET_IMGS = [];
 
   function renderPresetImgs(){
     Array.prototype.slice.call(layer.querySelectorAll('.pimg')).forEach(function(el){ el.parentNode.removeChild(el); });
