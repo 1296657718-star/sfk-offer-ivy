@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261102-183336">
+<meta name="x-build" content="20261103-140152">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -861,10 +861,11 @@ function rankRow(r, mode){
     else { rk = 'US News ' + r[5]; }
   }
   else if(mode === 'qs'){ rk = 'QS ' + r[6]; }
+  else if(mode === 'none'){ rk = ''; }
   else { rk = 'USNews ' + r[5] + ' · QS ' + r[6]; }
   return '<div class="rank"><div class="no">' + r[0] + '</div>' +
     '<div class="rlogo" style="color:' + r[3] + '">' + r[4] + '</div>' +
-    '<div class="rname">' + r[1] + '<span class="rk">' + rk + '</span></div>' +
+    '<div class="rname">' + r[1] + (rk ? '<span class="rk">' + rk + '</span>' : '') + '</div>' +
     '<div class="rside"><div class="k">offer数</div><div class="v">' + r[2] + '</div></div></div>';
 }
 
@@ -888,7 +889,8 @@ function applyFilters(){
   if(rows.length){
     box.innerHTML = rows.map(function(r, i){
       var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
-      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]]);
+      // 热门排行榜卡片不显示排名行（2026-11-03 用户要求删除）
+      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], 'none');
     }).join('');
   } else {
     box.innerHTML = '<div class="reserved"><div class="t">没有符合条件的院校</div><div class="s">换个筛选条件试试，或点「重置」清空</div></div>';
