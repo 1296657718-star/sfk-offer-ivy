@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261103-191402">
+<meta name="x-build" content="20261104-103932">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -691,6 +691,7 @@
 // 校徽映射（2026-11-03）：配了图的真实校徽（维基百科官方 seal/shield，128px PNG；
 // 芝加哥大学盾徽在维基已不可取，用官网 favicon 的盾形图标），落在 img/logos/ 随版本推送；
 // 未配置的学校自动回退首字母圆标。热门排行榜（p1）与爬藤榜单（p3）共用。
+// 2026-11-04 增：英港新前 6 所（帝国理工=官网新标、牛津=横版腰带纹章+字标、剑桥=完整纹章、UCL=官网紫标、NUS=官网橙N、港大=官方盾徽）。
 const RLOGO_MAP = {
   '斯坦福大学': 'img/logos/stanford.png',
   '耶鲁大学': 'img/logos/yale.png',
@@ -701,7 +702,13 @@ const RLOGO_MAP = {
   '普林斯顿大学': 'img/logos/princeton.png',
   '麻省理工学院': 'img/logos/mit.png',
   '哈佛大学': 'img/logos/harvard.png',
-  '芝加哥大学': 'img/logos/uchicago.png'
+  '芝加哥大学': 'img/logos/uchicago.png',
+  '帝国理工学院': 'img/logos/imperial.png',
+  '牛津大学': 'img/logos/oxford.png',
+  '剑桥大学': 'img/logos/cambridge.png',
+  '伦敦大学学院': 'img/logos/ucl.png',
+  '新加坡国立大学': 'img/logos/nus.png',
+  '香港大学': 'img/logos/hku.png'
 };
 
 // 热门排行榜示例数据，行尾 4 项为筛选标签：[国家, 科系, 专业, 学位]
