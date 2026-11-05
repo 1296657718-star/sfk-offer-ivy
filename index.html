@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="x-build" content="20261104-104847">
+<meta name="x-build" content="20261105-160942">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>offer 榜单 · 爬藤流程原型</title>
 
@@ -140,18 +140,22 @@
   .bk-fab + .bk-fab { top:-50px; }
   .bk-fab .ic { width:18px; height:18px; stroke-width:1.8; }
 
-  .ivy { margin:-2px 12px 10px; background:linear-gradient(120deg,#6C2BD9 0%,#B32DA8 100%); border-radius:14px; padding:15px 14px; color:#fff; display:flex; align-items:center; gap:10px; position:relative; z-index:3; overflow:hidden; }
-  .ivy .h { font-size:16px; font-weight:800; }
-  .ivy .s { font-size:10.5px; opacity:.88; margin-top:4px; }
-  .ivy .go { width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; font-size:11px; }
+  /* 斯芬克独家榜单（p1）：渐变底专区容器 + 双渐变卡 */
+  .exwrap { margin:26px 12px 2px; background:linear-gradient(150deg,#F3EBFF 0%,#FFE7F0 60%,#FFEDF3 100%); border-radius:16px; padding:13px 9px 9px; }
+  .exhead { font-size:14.5px; font-weight:800; color:#4A1B86; padding:0 5px 10px; display:flex; align-items:center; gap:7px; }
+  .exhead::before { content:''; width:4px; height:14px; border-radius:2px; background:linear-gradient(180deg,#6C2BD9,#E8355E); }
+  .exhead::after { content:'SFK EXCLUSIVE'; font-size:8px; font-weight:800; letter-spacing:1.5px; color:#B678E8; margin-left:2px; transform:translateY(1px); }
+  .exgrid { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:0; }
+  .excard { border-radius:12px; padding:15px 12px; color:#fff; position:relative; overflow:hidden; box-shadow:0 3px 8px rgba(90,30,140,.16); }
+  .excard .big2 { font-size:12.5px; font-weight:800; line-height:1.3; white-space:nowrap; }
+  .excard .orb { position:absolute; border-radius:50%; background:rgba(255,255,255,.14); }
+  .ex-ivy { background:linear-gradient(100deg,#F0326E 0%,#8B2BD9 100%); }
+  .ex-ft { background:linear-gradient(100deg,#D92B62 0%,#7226C9 100%); }
 
 
   .tabs { display:flex; background:#fff; padding:0 12px; border-bottom:1px solid #F2F2F2; position:sticky; top:40px; z-index:15; }
   .tab { flex:1; text-align:center; padding:11px 4px; font-size:12.5px; color:#777; border-bottom:2px solid transparent; }
   .tab.on { color:#E8355E; font-weight:700; border-bottom-color:#E8355E; }
-  .pool-h { display:flex; align-items:baseline; justify-content:space-between; padding:22px 14px 0; }
-  .pool-h .n { font-size:15.5px; font-weight:800; letter-spacing:.5px; }
-  .pool-h .c { font-size:11.5px; color:#B32DA8; font-weight:700; }
   .seg { display:flex; background:#F5F5F7; border-radius:10px; margin:12px 14px 0; padding:3px; }
   .seg .sg { flex:1; text-align:center; padding:9px 0; font-size:13px; color:#666; border-radius:8px; cursor:pointer; }
   .seg .sg.on { background:#fff; color:#E8355E; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.08); }
@@ -185,6 +189,12 @@
   .obig .ocard-big .ometa { font-size:11.5px; }
   .obig .ocard-big .oqr { width:34px; height:34px; border-radius:5px; }
   .obig .otip { color:rgba(255,255,255,.85); font-size:11px; margin-top:14px; }
+  /* 全日制榜单临时页：模块卡 + 页面内长图展开（不浮层，随页面滚动查看） */
+  /* pqd 榜单图（seg 切换后直接页面内滚动查看） */
+  #qdBox { padding:12px 12px 16px; }
+  #qdBox img { width:100%; display:block; background:#fff; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); }
+  .obig .oimgwrap { width:264px; max-height:calc(100% - 60px); overflow-y:auto; border-radius:12px; }
+  .obig .oimgwrap img { width:100%; display:block; }
   #tierBox .rank { cursor:pointer; }
   .sch-hero { padding:18px 14px 20px; color:#fff; position:relative; overflow:hidden; }
   .sch-season { display:inline-block; border:1px solid rgba(255,255,255,.55); border-radius:12px; padding:3px 9px; font-size:10px; }
@@ -223,9 +233,12 @@
   .kf-col { position:sticky; top:600px; z-index:16; height:0; }
   .kf { position:absolute; right:12px; width:46px; height:46px; border-radius:50%; background:#E8355E; color:#fff; display:flex; align-items:center; justify-content:center; font-size:9px; text-align:center; box-shadow:0 4px 10px rgba(232,53,94,.35); cursor:pointer; }
   .reserved { margin:16px 12px; border:1px dashed #D5D5D5; border-radius:12px; padding:20px 14px; text-align:center; background:#FCFCFC; }
+  .demotip { padding:10px 12px 6px; font-size:10.5px; color:#B5B5B5; text-align:center; }
   .reserved .t { font-size:13px; color:#999; font-weight:600; }
   .reserved .s { font-size:10.5px; color:#BBB; margin-top:5px; line-height:1.7; }
-  .cta-wrap { position:sticky; bottom:0; z-index:14; padding:14px 14px 16px; background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 26%); }
+  /* 1v1 选校评估按钮：sticky 钉底；内容不满一屏时由 flex + margin-top:auto 推到屏幕底部（2026-11-05） */
+  .page.active:has(.cta-wrap) { display:flex; flex-direction:column; min-height:100%; }
+  .cta-wrap { position:sticky; bottom:0; z-index:14; margin-top:auto; padding:14px 14px 16px; background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 26%); }
   .cta { background:linear-gradient(90deg,#E8355E,#F0517A); color:#fff; text-align:center; padding:14px; border-radius:26px; font-size:14.5px; font-weight:700; box-shadow:0 6px 16px rgba(232,53,94,.3); }
   .demo { background:#FFF7E6; color:#9A6A00; font-size:10.5px; padding:7px 14px; }
   .tap { cursor:pointer; transition:transform .12s ease; }
@@ -278,6 +291,48 @@
   .fmj.on { color:#E8355E; font-weight:600; }
   .fmj.on .cb2 { background:#E8355E; border-color:#E8355E; }
   .fmj.on .cb2::after { content:''; position:absolute; left:4px; top:1px; width:4px; height:7px; border:solid #fff; border-width:0 1.6px 1.6px 0; transform:rotate(43deg); }
+  /* 科系+专业 双栏联动（方案三落地）：左科系导航 / 右专业 chips */
+  .fcolwrap { display:flex; flex-direction:column; height:100%; }
+  .fcols { flex:1; display:flex; min-height:0; }
+  .flv { width:124px; flex:0 0 124px; background:#F7F7F7; overflow-y:auto; }
+  .flv::-webkit-scrollbar { width:0; }
+  .flv-it { padding:13px 9px; font-size:11.5px; line-height:1.4; color:#555; border-left:2.5px solid transparent; position:relative; cursor:pointer; }
+  .flv-it small { display:block; font-size:9px; color:#B8B8B8; margin-top:2px; }
+  .flv-it.on { background:#fff; color:#E8355E; font-weight:700; border-left-color:#E8355E; }
+  .flv-it.sel { color:#E8355E; }
+  .flv-it.sel.has::after { background:#E8355E; }
+  .flv-it.on small { color:#E899AC; }
+  .flv-it.has::after { content:''; position:absolute; right:7px; top:15px; width:5px; height:5px; border-radius:50%; background:#E8355E; }
+  .frvs { flex:1; min-width:0; overflow-y:auto; background:#fff; padding:12px 12px 8px; }
+  /* 科系+专业右栏：专业搜索条（条形框，勿与 p1 圆形搜索钮 .fsearch 混用） */
+  .fsb { position:relative; padding-bottom:10px; }
+  .fsb input { width:100%; box-sizing:border-box; height:34px; border:1px solid #E5E5E8; border-radius:9px; background:#F7F7F8; padding:0 30px 0 32px; font-size:12px; color:#333; outline:none; }
+  .fsb input:focus { border-color:#E8355E; background:#fff; }
+  .fsb input::placeholder { color:#ADADB3; }
+  .fsb-ic { position:absolute; left:10px; top:10px; width:15px; height:15px; color:#B4B4BA; stroke-width:2; }
+  .fsb-x { position:absolute; right:8px; top:9px; width:17px; height:17px; line-height:15px; text-align:center; border-radius:50%; background:#D8D8DC; color:#fff; font-size:9px; cursor:pointer; }
+  .frvs::-webkit-scrollbar { width:0; }
+  .fgrp { font-size:10.5px; color:#999; margin:10px 0 4px; font-weight:700; }
+  .fgrp:first-of-type { margin-top:0; }
+  /* 专业列表式排布：一行一个专业，右侧勾选圈（替代原 chips 流式排布） */
+  .fcrow { display:flex; flex-direction:column; padding-bottom:6px; }
+  .fchip { display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid transparent; border-bottom:1px solid #F4F4F6; background:transparent; border-radius:0; padding:11px 2px; font-size:12.5px; color:#333; cursor:pointer; text-align:left; width:100%; box-sizing:border-box; }
+  .fchip::after { content:''; width:17px; height:17px; flex:0 0 17px; border-radius:50%; border:1.5px solid #DCDCE0; box-sizing:border-box; }
+  .fchip.on { background:transparent; border-bottom-color:#F4F4F6; color:#E8355E; font-weight:600; }
+  .fchip.on::after { content:'✓'; border-color:#E8355E; background:#E8355E; color:#fff; font-size:10px; line-height:14px; text-align:center; }
+  .fselbar { border-top:1px solid #F2F2F2; padding:10px 14px; display:flex; align-items:center; gap:8px; background:#fff; flex:0 0 auto; }
+  .fselbar .k { font-size:11px; color:#999; flex:0 0 auto; }
+  .fselbar .v { font-size:11.5px; color:#E8355E; font-weight:700; }
+  .fselbar .fclear { margin-left:auto; font-size:11.5px; color:#888; cursor:pointer; }
+  .fselbar .fclear.dis { color:#CCC; pointer-events:none; }
+  /* 科系维度：隐藏黑边栏，改用弹层式顶栏（✕/标题/完成） */
+  #pf.deptmode .navbar, #pf.deptmode .fbody { display:none; }
+  .fsheet { flex:1; display:flex; flex-direction:column; min-height:0; background:#fff; }
+  .fsheet .fcolwrap { flex:1; min-height:0; }
+  .fshead { display:flex; align-items:center; padding:11px 14px; border-bottom:1px solid #F2F2F2; flex:0 0 auto; }
+  .fsx { width:27px; height:27px; border-radius:50%; background:#F5F5F5; color:#555; display:flex; align-items:center; justify-content:center; font-size:13px; cursor:pointer; flex:0 0 27px; }
+  .fstt { flex:1; text-align:center; font-size:14.5px; font-weight:700; color:#222; }
+  .fsdone { color:#E8355E; font-size:13.5px; font-weight:700; cursor:pointer; padding:4px 2px 4px 12px; }
   .fbtn.chosen { color:#E8355E; font-weight:700; }
   .fbtn.chosen .lbl { color:#E8355E; }
   /* ===== 智能选校页（p4，联动小程序原生功能） ===== */
@@ -340,7 +395,7 @@
           <div class="word">OFFER</div>
         </div>
         <div style="display:flex;flex-direction:column;gap:9px;">
-          <div class="gcard g-ug tap" data-go="p2" style="flex:1">
+          <div class="gcard g-ug" style="flex:1">
             <svg class="ic"><use href="#i-cap"/></svg>
             <div class="cap">2026 OFFER 录取榜单</div>
             <div class="big2">本科</div>
@@ -363,6 +418,19 @@
         <div class="dept d3">影视<br>传媒</div>
         <div class="dept d4">游戏<br>动画</div>
         <div class="dept d6">音乐<br>榜单</div>
+      </div>
+
+      <div class="exwrap">
+        <div class="exhead">斯芬克独家榜单</div>
+        <div class="exgrid">
+          <div class="excard ex-ivy tap" data-go="p3">
+            <div class="orb" style="width:52px;height:52px;right:-14px;top:-12px"></div>
+            <div class="big2">艺术爬藤offer榜单</div>
+          </div>
+          <div class="excard ex-ft tap" id="qdCard">
+            <div class="big2">全日制榜单</div>
+          </div>
+        </div>
       </div>
 
       <div class="secrow"><div class="h">各国家录取榜单</div><div class="season">26 申请季 <svg class="ic ic-sm"><use href="#i-down"/></svg></div></div>
@@ -410,14 +478,6 @@
         <div class="bk-cut">数据截止：<br>2026年10月30日 北京时间16:56</div>
       </div>
 
-      <div class="ivy tap" data-go="p3">
-        <div style="flex:1">
-          <div class="h">爬藤战绩</div>
-          <div class="s">美本 TOP30 · 英国 G5 · 港前三</div>
-        </div>
-        <div class="go"><svg class="ic"><use href="#i-right"/></svg></div>
-      </div>
-
       <div class="bk-dock">
         <div class="bk-fab tap" id="bkDl" title="下载"><svg class="ic"><use href="#i-dl"/></svg></div>
         <div class="bk-fab tap" id="bkShare" title="分享"><svg class="ic"><use href="#i-out"/></svg></div>
@@ -430,26 +490,21 @@
     <div class="page" id="p3">
       <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
       <div class="navbar">
-        <div class="back tap" data-back="p2"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="back tap" data-back="p1"><svg class="ic"><use href="#i-left"/></svg></div>
         <div class="ttl" style="font-size:15px">斯芬克国际艺术留学</div>
         <div class="sp"></div>
         <div class="capsule">···</div>
       </div>
 
-      <div class="demo"><svg class="ic"><use href="#i-info"/></svg> 以下数字均为示例数据，仅用于原型演示</div>
-
       <div style="background:linear-gradient(150deg,#6C2BD9 0%,#B32DA8 55%,#E86A9B 100%); color:#fff; padding:20px 14px 22px; position:relative; overflow:hidden;">
         <div class="orb" style="width:120px;height:120px;background:rgba(255,255,255,.12);right:-34px;top:-20px"></div>
-        <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">爬藤战绩</div>
-        <div style="font-size:11px;opacity:.88;margin-top:6px">冲刺世界顶尖名校 · 本科录取</div>
+        <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">艺术爬藤offer榜单</div>
       </div>
 
       <div class="fab-col">
         <div class="fab tap" id="fabDl"><svg class="ic"><use href="#i-dl"/></svg></div>
         <div class="fab tap" id="fabShare"><svg class="ic"><use href="#i-sh"/></svg></div>
       </div>
-
-      <div class="meta">数据截止 2026年10月22日 北京时间 14:41 · 统计口径：2026 申请季本科录取 offer</div>
 
       <div class="seg" id="regionSeg">
         <div class="sg on" data-region="us">美本</div>
@@ -573,7 +628,7 @@
         <div><span class="sch-count" id="schCount">1+</span></div>
         <div class="sch-logo" id="schLogo">Y</div>
         <div class="sch-name" id="schName">耶鲁大学</div>
-        <div class="sch-rank" id="schRank">US News 4(并列)</div>
+        <div class="sch-rank" id="schRank">US News 2027 4(并列)</div>
         <div class="sch-acts">
           <div class="sact tap" id="actFav">♡ 收藏</div>
           <div class="sact tap" id="actGuide">申请指导</div>
@@ -630,6 +685,30 @@
       <div style="height:30px"></div>
     </div>
 
+    <!-- ============ 页面 9：全日制榜单（临时中转，后续替换为正式页面） ============ -->
+    <div class="page" id="pqd">
+      <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
+      <div class="navbar">
+        <div class="back tap" data-back="p1"><svg class="ic"><use href="#i-left"/></svg></div>
+        <div class="ttl" style="font-size:15px">全日制榜单</div>
+        <div class="sp"></div>
+        <div class="capsule">···</div>
+      </div>
+
+      <div style="background:linear-gradient(120deg,#F0326E 0%,#8B2BD9 100%); color:#fff; padding:20px 14px 22px; position:relative; overflow:hidden;">
+        <div class="orb" style="width:120px;height:120px;background:rgba(255,255,255,.12);right:-34px;top:-20px"></div>
+        <div style="font-size:27px;font-weight:800;line-height:1.25;margin-top:4px;letter-spacing:.5px">全日制offer榜单</div>
+      </div>
+
+      <!-- 与 p3 统一：顶部 seg 切换，默认艺术高中OFFER榜 -->
+      <div class="seg" id="qdSeg">
+        <div class="sg on" data-qd="0">艺术高中OFFER榜</div>
+        <div class="sg" data-qd="1">全日制学院offer榜</div>
+      </div>
+
+      <div id="qdBox"></div>
+    </div>
+
     <!-- ============ 页面 8：筛选页 ============ -->
     <div class="page" id="pf">
       <div class="status"><span>9:41</span><span>●●● ⚡ ▮</span></div>
@@ -660,6 +739,16 @@
         </div>
         <div class="fright" id="fRight"></div>
       </div>
+
+      <!-- 科系+专业 双栏联动（方案三）：无黑边栏，顶栏 ✕/标题/完成 -->
+      <div class="fsheet" id="fSheet" style="display:none">
+        <div class="fshead">
+          <div class="fsx tap" id="fSheetX">✕</div>
+          <div class="fstt" id="fSheetTitle">专业筛选</div>
+          <div class="fsdone" id="fSheetDone">完成</div>
+        </div>
+        <div class="fcolwrap" id="fSheetBody"></div>
+      </div>
     </div>
   </div>
 
@@ -681,7 +770,7 @@
   <div class="obig" id="obig">
     <div class="oclose tap" id="obigClose">✕</div>
     <div class="ocard-big" id="obigBody"></div>
-    <div class="otip">真实环境中为 offer 信原图，支持长按保存（原型演示）</div>
+    <div class="otip">真实环境为高清原图，支持长按保存（原型演示）</div>
   </div>
 </div>
 
@@ -708,85 +797,109 @@ const RLOGO_MAP = {
   '剑桥大学': 'img/logos/cambridge.png',
   '伦敦大学学院': 'img/logos/ucl.png',
   '新加坡国立大学': 'img/logos/nus.png',
-  '香港大学': 'img/logos/hku.png'
+  '香港大学': 'img/logos/hku.png',
+  '纽约视觉艺术学院': 'img/logos/sva.png',
+  '芝加哥艺术学院': 'img/logos/saic.png',
+  '普瑞特艺术学院': 'img/logos/pratt.png',
+  '萨凡纳艺术设计学院': 'img/logos/scad.png',
+  '帕森斯设计学院': 'img/logos/parsons.png',
+  '罗德岛设计学院': 'img/logos/risd.png'
 };
 
 // 热门排行榜示例数据，行尾 4 项为筛选标签：[国家, 科系, 专业, 学位]
 const RANK = [
-  ['01','斯坦福大学','1+','#8C1515','S',4,3,'美国','工业交互','交互设计','本科'],
-  ['03','耶鲁大学','2+','#00356B','Y',5,41,'美国','插画纯艺','绘画','本科'],
-  ['04','康奈尔大学','29+','#B31B1B','C',11,16,'美国','空间','建筑设计','研究生'],
-  ['05','哥伦比亚大学','43+','#1D4F91','C',13,34,'美国','视觉传达','平面设计','研究生'],
-  ['06','宾夕法尼亚大学','30+','#011F5B','P',10,11,'美国','工业交互','产品设计','本科'],
-  ['07','约翰霍普金斯大学','41+','#002D72','J',6,26,'美国','视觉传达','新媒体设计','研究生'],
-  ['08','西北大学','8+','#4E2A84','N',6,42,'美国','影视传媒','电影制作','研究生'],
-  ['09','布朗大学','1+','#4E3629','B',13,73,'美国','插画纯艺','当代艺术/实践','本科'],
-  ['10','圣路易斯华盛顿大学','22+','#A51417','W',21,176,'美国','工业交互','工业设计','研究生'],
-  ['11','密歇根安娜堡分校','28+','#00274C','M',21,44,'美国','空间','城市设计','研究生'],
-  ['12','达特茅斯学院','1+','#00693E','D',15,37,'美国','视觉传达','品牌设计','本科'],
-  ['13','南加州大学','130+','#990000','S',27,127,'美国','影视传媒','影视制作','本科'],
-  ['14','威斯康星大学麦迪逊分校','13+','#C5050C','W',29,102,'美国','游戏动画','游戏设计','研究生'],
-  ['15','伦敦大学学院','38+','#002248','U',22,9,'英国','空间','建筑设计','研究生'],
-  ['16','伦敦政经学院','24+','#E30613','L',236,56,'英国','时尚','时尚管理','研究生'],
-  ['17','香港大学','32+','#006F51','H',44,11,'中国香港','游戏动画','娱乐设计','研究生'],
-  ['18','香港中文大学','24+','#7A2E8E','C',53,32,'中国香港','插画纯艺','插画设计','本科']
+  ['01','斯坦福大学','1+','#8C1515','S',4,3,'美国','工业交互科系','交互设计','本科'],
+  ['03','耶鲁大学','2+','#00356B','Y',5,41,'美国','艺术人文科系','绘画','本科'],
+  ['04','康奈尔大学','29+','#B31B1B','C',11,16,'美国','AI空间未来科系','建筑设计','研究生'],
+  ['05','哥伦比亚大学','43+','#1D4F91','C',13,34,'美国','数字艺术与设计科系','平面设计','研究生'],
+  ['06','宾夕法尼亚大学','30+','#011F5B','P',10,11,'美国','工业交互科系','产品设计','本科'],
+  ['07','约翰霍普金斯大学','41+','#002D72','J',6,26,'美国','数字艺术与设计科系','新媒体设计','研究生'],
+  ['08','西北大学','8+','#4E2A84','N',6,42,'美国','影视传媒科系','电影制作','研究生'],
+  ['09','布朗大学','1+','#4E3629','B',13,73,'美国','艺术人文科系','当代艺术/实践','本科'],
+  ['10','圣路易斯华盛顿大学','22+','#A51417','W',21,176,'美国','工业交互科系','工业设计','研究生'],
+  ['11','密歇根安娜堡分校','28+','#00274C','M',21,44,'美国','AI空间未来科系','城市设计','研究生'],
+  ['12','达特茅斯学院','1+','#00693E','D',15,37,'美国','数字艺术与设计科系','品牌设计','本科'],
+  ['13','南加州大学','130+','#990000','S',27,127,'美国','影视传媒科系','影视制作','本科'],
+  ['14','威斯康星大学麦迪逊分校','13+','#C5050C','W',29,102,'美国','游戏动画科系','游戏设计','研究生'],
+  ['15','伦敦大学学院','38+','#002248','U',22,9,'英国','AI空间未来科系','建筑设计','研究生'],
+  ['16','伦敦政经学院','24+','#E30613','L',236,56,'英国','时尚科系','时尚管理','研究生'],
+  ['17','香港大学','32+','#006F51','H',44,11,'中国香港','游戏动画科系','娱乐设计','研究生'],
+  ['18','香港中文大学','24+','#7A2E8E','C',53,32,'中国香港','艺术人文科系','插画设计','本科']
 ];
 
 
 // 爬藤榜单：以下为示例数据（数字均为演示用，非真实统计）
-// 美本按 US News 2026 名次排列（艺术类院校显示 US News 艺术学科榜名次；帕森斯、普瑞特未进该榜，显示 QS 艺术与设计学科排名）
+// 美本：综合类按 US News 2027 名次排列；艺术类（TOP30艺术类）按《美国-本科专业排名2025-2026》23 个本科专业分榜的积分汇总排列（综合大学已剔除）
 // 英国、中国香港、新加坡按 QS 2027 名次排列，榜单行只显示 QS 排名（USNews 字段保留备用）
 // 行格式：[序号(渲染时自动重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
 var IVY_DATA = {
-  // 排名口径：美本 = US News 2026（综合类 TOP30 / 艺术类 Fine Arts 榜）；英国·港新 = QS World University Rankings 2027
+  // 排名口径：美本 = US News 2027（综合类 TOP30 / 艺术类 Fine Arts 榜）；英国·港新 = QS World University Rankings 2027
   // 行格式：[序号(渲染时重排), 校名, offer数, 主题色, 首字母, USNews排名, QS排名, 分组标签]
   // 注意：新增院校的 offer 数为占位数字，待替换真实数据；QS 列未核到 2027 数据的填 —
   us: { rows: [
-    ['','普林斯顿大学','1+','#E77500','P',1,22,'哈耶普斯麻'],
-    ['','麻省理工学院','1+','#8A8B8C','M',2,1,'哈耶普斯麻'],
+    ['','麻省理工学院','1+','#8A8B8C','M',1,1,'哈耶普斯麻'],
+    ['','普林斯顿大学','1+','#E77500','P',2,22,'哈耶普斯麻'],
     ['','哈佛大学','1+','#A51C30','H',3,5,'哈耶普斯麻'],
-    ['','斯坦福大学','2+','#8C1515','S','4(并列)',3,'哈耶普斯麻'],
-    ['','耶鲁大学','2+','#00356B','Y','4(并列)',41,'哈耶普斯麻'],
-    ['','芝加哥大学','5+','#800000','C',6,'—','TOP30综合类'],
-    ['','杜克大学','4+','#012169','D','7(并列)',45,'TOP30综合类'],
-    ['','约翰霍普金斯大学','13+','#002D72','J','7(并列)',26,'TOP30综合类'],
-    ['','西北大学','2+','#4E2A84','N','7(并列)',42,'TOP30综合类'],
-    ['','宾夕法尼亚大学','4+','#011F5B','P','7(并列)',11,'TOP30综合类'],
-    ['','加州理工学院','1+','#FF6C0C','C',11,10,'TOP30综合类'],
-    ['','康奈尔大学','7+','#B31B1B','C',12,16,'TOP30综合类'],
-    ['','布朗大学','3+','#4E3629','B','13(并列)',73,'TOP30综合类'],
-    ['','达特茅斯学院','1+','#00693E','D','13(并列)',37,'TOP30综合类'],
-    ['','哥伦比亚大学','5+','#1D4F91','C','15(并列)',34,'TOP30综合类'],
-    ['','加州大学伯克利分校','11+','#003262','B','15(并列)','—','TOP30综合类'],
-    ['','莱斯大学','3+','#00256A','R','17(并列)','—','TOP30综合类'],
-    ['','加州大学洛杉矶分校','17+','#2D68C4','U','17(并列)','—','TOP30综合类'],
-    ['','范德堡大学','4+','#866D4B','V','17(并列)','—','TOP30综合类'],
-    ['','卡内基梅隆大学','9+','#C41230','C','20(并列)',58,'TOP30综合类'],
-    ['','密歇根安娜堡分校','6+','#00274C','M','20(并列)',44,'TOP30综合类'],
+    ['','耶鲁大学','2+','#00356B','Y',4,41,'哈耶普斯麻'],
+    ['','加州理工学院','1+','#FF6C0C','C','5(并列)',10,'TOP30综合类'],
+    ['','斯坦福大学','2+','#8C1515','S','5(并列)',3,'哈耶普斯麻'],
+    ['','宾夕法尼亚大学','4+','#011F5B','P',7,11,'TOP30综合类'],
+    ['','杜克大学','4+','#012169','D',8,45,'TOP30综合类'],
+    ['','约翰斯·霍普金斯大学','13+','#002D72','J','9(并列)',26,'TOP30综合类'],
+    ['','西北大学','2+','#4E2A84','N','9(并列)',42,'TOP30综合类'],
+    ['','芝加哥大学','5+','#800000','C','9(并列)','—','TOP30综合类'],
+    ['','哥伦比亚大学','5+','#1D4F91','C','12(并列)',34,'TOP30综合类'],
+    ['','达特茅斯学院','1+','#00693E','D','12(并列)',37,'TOP30综合类'],
+    ['','卡内基梅隆大学','9+','#C41230','C','14(并列)',58,'TOP30综合类'],
+    ['','康奈尔大学','7+','#B31B1B','C','14(并列)',16,'TOP30综合类'],
+    ['','布朗大学','3+','#4E3629','B','16(并列)',73,'TOP30综合类'],
+    ['','莱斯大学','3+','#00256A','R','16(并列)','—','TOP30综合类'],
+    ['','范德堡大学','4+','#866D4B','V','16(并列)','—','TOP30综合类'],
+    ['','圣路易斯华盛顿大学','5+','#A51417','W','16(并列)','—','TOP30综合类'],
+    ['','加州大学伯克利分校','11+','#003262','B','20(并列)','—','TOP30综合类'],
+    ['','加州大学洛杉矶分校','17+','#2D68C4','U','20(并列)','—','TOP30综合类'],
     ['','圣母大学','2+','#0C2340','N','20(并列)','—','TOP30综合类'],
-    ['','圣路易斯华盛顿大学','5+','#A51417','W','20(并列)','—','TOP30综合类'],
-    ['','埃默里大学','6+','#012D6B','E','24(并列)','—','TOP30综合类'],
-    ['','乔治城大学','4+','#041E42','G','24(并列)','—','TOP30综合类'],
-    ['','北卡罗来纳大学教堂山分校','3+','#4B9CD3','U','26(并列)','—','TOP30综合类'],
-    ['','弗吉尼亚大学','5+','#232D4B','V','26(并列)','—','TOP30综合类'],
-    ['','南加州大学','44+','#990000','S',28,127,'TOP30综合类'],
-    ['','加州大学圣地亚哥分校','9+','#00629B','U',29,'—','TOP30综合类'],
-    ['','佛罗里达大学','7+','#0021A5','F','30(并列)','—','TOP30综合类'],
-    ['','德克萨斯大学奥斯汀分校','8+','#BF5700','T','30(并列)','—','TOP30综合类'],
-    ['','罗德岛设计学院','5+','#3B5BA5','R','2(并列)','—','TOP30艺术类'],
-    ['','弗吉尼亚联邦大学','3+','#F8B300','V','2(并列)','—','TOP30艺术类'],
-    ['','芝加哥艺术学院','6+','#B08D3E','A',6,'—','TOP30艺术类'],
-    ['','加州艺术学院','4+','#D2232A','C',7,'—','TOP30艺术类'],
-    ['','罗格斯大学新布朗斯维克分校','2+','#CC0033','R','8(并列)','—','TOP30艺术类'],
-    ['','阿尔弗雷德大学纽约州立陶瓷学院','1+','#6C2E9C','A','11(并列)','—','TOP30艺术类'],
-    ['','克兰布鲁克艺术学院','1+','#2E5A88','C','11(并列)','—','TOP30艺术类'],
-    ['','纽约市立大学亨特学院','2+','#333F48','H','14(并列)','—','TOP30艺术类'],
-    ['','纽约大学','8+','#57068C','N','14(并列)','—','TOP30艺术类'],
-    ['','纽约视觉艺术学院','7+','#C8102E','S','14(并列)','—','TOP30艺术类'],
-    ['','天普大学','3+','#9E1B34','T','14(并列)','—','TOP30艺术类'],
-    ['','威斯康星大学麦迪逊分校','4+','#C5050C','W','14(并列)','—','TOP30艺术类'],
-    ['','帕森斯设计学院','9+','#222222','P','—',2,'TOP30艺术类'],
-    ['','普瑞特艺术学院','4+','#5F8F4E','P','—',8,'TOP30艺术类']
+    ['','埃默里大学','6+','#012D6B','E','23(并列)','—','TOP30综合类'],
+    ['','乔治城大学','4+','#041E42','G','23(并列)','—','TOP30综合类'],
+    ['','密歇根大学安娜堡分校','6+','#00274C','M',25,44,'TOP30综合类'],
+    ['','弗吉尼亚大学','5+','#232D4B','V',26,'—','TOP30综合类'],
+    ['','北卡罗来纳大学教堂山分校','3+','#4B9CD3','U','27(并列)','—','TOP30综合类'],
+    ['','南加州大学','44+','#990000','S','27(并列)',127,'TOP30综合类'],
+    ['','佐治亚理工学院','3+','#B3A369','G','29(并列)','—','TOP30综合类'],
+    ['','加州大学圣地亚哥分校','9+','#00629B','U','29(并列)','—','TOP30综合类'],
+    // TOP30艺术类：来源《美国-本科专业排名2025-2026》（23 个本科专业方向分榜）交叉汇总——
+    // 只计独立艺术/专门类院校（综合大学剔除）；按各专业榜名次换算积分（第1名10分…第10名1分）累加排序；
+    // r[5] = 综合积分，r[6] = '—'（副标题统一显示「2025专业排名 积分N」）
+    ['','罗德岛设计学院','12+','#3B5BA5','R',139,'—','TOP30艺术类'],
+    ['','普瑞特艺术学院','11+','#5F8F4E','P',98,'—','TOP30艺术类'],
+    ['','帕森斯设计学院','10+','#222222','P',92,'—','TOP30艺术类'],
+    ['','萨凡纳艺术设计学院','10+','#8A6D4B','S',90,'—','TOP30艺术类'],
+    ['','纽约视觉艺术学院','9+','#C8102E','S',84,'—','TOP30艺术类'],
+    ['','芝加哥艺术学院','8+','#B08D3E','A',78,'—','TOP30艺术类'],
+    ['','艺术中心设计学院','8+','#333333','A',70,'—','TOP30艺术类'],
+    ['','加州艺术学院CCA','7+','#D2232A','C',68,'—','TOP30艺术类'],
+    ['','马里兰艺术学院','6+','#1C4A9C','M',56,'—','TOP30艺术类'],
+    ['','纽约时装技术学院','6+','#007681','F',44,'—','TOP30艺术类'],
+    ['','加州艺术学院CalArts','5+','#8A1538','C',37,'—','TOP30艺术类'],
+    ['','瑞格林艺术设计学院','5+','#7C2529','R',26,'—','TOP30艺术类'],
+    ['','旧金山艺术大学','4+','#A4123F','A',20,'—','TOP30艺术类'],
+    ['','奥蒂斯艺术设计学院','4+','#00539B','O',17,'—','TOP30艺术类'],
+    ['','芝加哥哥伦比亚学院','3+','#46166B','C',11,'—','TOP30艺术类'],
+    ['','艾默生学院','3+','#5C2E91','E',10,'—','TOP30艺术类'],
+    ['','库伯联盟学院','3+','#A32638','C',10,'—','TOP30艺术类'],
+    ['','纽约利姆时尚商业管理学院','2+','#C4406E','L',8,'—','TOP30艺术类'],
+    ['','迪吉彭理工学院','2+','#C0392B','D',8,'—','TOP30艺术类'],
+    ['','北卡罗来纳艺术学院','2+','#3F6C51','U',7,'—','TOP30艺术类'],
+    ['','麻省艺术与设计学院','2+','#C7A008','M',6,'—','TOP30艺术类'],
+    ['','哥伦布艺术设计学院','1+','#A0522D','C',6,'—','TOP30艺术类'],
+    ['','创意设计学院','1+','#4B6F44','C',6,'—','TOP30艺术类'],
+    ['','南加州建筑学院','1+','#37474F','S',5,'—','TOP30艺术类'],
+    ['','纽约室内设计学院','1+','#6D1A36','N',5,'—','TOP30艺术类'],
+    ['','福赛大学','1+','#B8860B','F',5,'—','TOP30艺术类'],
+    ['','明尼阿波利斯艺术设计学院','1+','#E07B00','M',4,'—','TOP30艺术类'],
+    ['','波士顿建筑学院','1+','#556B2F','B',1,'—','TOP30艺术类'],
+    ['','纽约州立大学帕切斯学院','1+','#33608C','P',1,'—','TOP30艺术类'],
+    ['','洛杉矶电影学院','1+','#8E3B46','L',0,'—','TOP30艺术类']
   ]},
   ukhk: { rows: [
     ['','帝国理工学院','22+','#003E74','I',100,2,'G5'],
@@ -834,21 +947,25 @@ function paintGroups(){
 
 function ivyFilteredRows(){
   var data = IVY_DATA[curRegion];
-  return (data && data.rows) ? data.rows.filter(function(r){
+  if(!(data && data.rows)) return [];
+  // 2026-11-05：TOP30综合类 = 表格「US News 全美综合大学 TOP30」全部 30 所，含哈耶普斯麻 5 所，
+  // 顺序即表格 2027 名次行序；哈耶普斯麻是另一套分组（只取 5 所），两套互不干扰。
+  if(curGroup === 'TOP30综合类'){
+    return data.rows.filter(function(r){ return r[7] !== 'TOP30艺术类'; });
+  }
+  return data.rows.filter(function(r){
     return curGroup === '全部' || r[7] === curGroup;
-  }) : [];
+  });
 }
 
 function renderIvy(){
   var label = RGN_LABEL[curRegion] + (curGroup === '全部' ? '' : ' · ' + curGroup);
   var rows = ivyFilteredRows();
-  var html = '<div class="pool-h"><div class="n">' + label + '</div>' +
-             '<div class="c">' + (rows.length ? '共 ' + rows.length + ' 所' : '') + '</div></div>';
+  var html = '';
   if(rows.length){
-    html += rows.map(function(r, i){
-      var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
-      // 美本显示 US News 排名（艺术类院校无综排，显示 QS 艺术学科排名）；英国·港新显示 QS 排名
-      return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6], r[7]], curRegion === 'us' ? 'us' : 'qs');
+    // 2026-11-05：榜单行不显示池子标题/共N所/序号/排名小字（用户要求，各筛选维度一致）
+    html += rows.map(function(r){
+      return rankRow(['', r[1], r[2], r[3], r[4], r[5], r[6], r[7]], 'ivy');
     }).join('');
   } else {
     html += '<div class="reserved"><div class="t">榜单数据待补充</div>' +
@@ -862,17 +979,20 @@ function renderIvy(){
 }
 
 function rankRow(r, mode){
+  /* mode: ivy=p3爬藤榜单（无序号无排名小字） / us / qs / none / 其他=数字+双排名（分享海报用） */
   var rk;
-  if(mode === 'us'){
+  if(mode === 'ivy'){ rk = ''; }
+  else if(mode === 'us'){
     if(r[5] === '—'){ rk = 'QS 艺术学科 ' + r[6]; }
-    else if(r[7] === 'TOP30艺术类'){ rk = 'US News 艺术 ' + r[5]; }
-    else { rk = 'US News ' + r[5]; }
+    else if(r[7] === 'TOP30艺术类'){ rk = '2025专业排名 积分' + r[5]; }
+    else { rk = 'US News 2027 ' + r[5]; }
   }
   else if(mode === 'qs'){ rk = 'QS ' + r[6]; }
   else if(mode === 'none'){ rk = ''; }
   else { rk = 'USNews ' + r[5] + ' · QS ' + r[6]; }
   var lg = RLOGO_MAP[r[1]];
-  return '<div class="rank"><div class="no">' + r[0] + '</div>' +
+  return '<div class="rank">' +
+    (mode === 'ivy' ? '' : '<div class="no">' + r[0] + '</div>') +
     (lg
       ? '<div class="rlogo imgv"><img src="' + lg + '" alt="' + r[1] + '校徽"></div>'
       : '<div class="rlogo" style="color:' + r[3] + '">' + r[4] + '</div>') +
@@ -891,8 +1011,10 @@ function deptHit(r){
 function applyFilters(){
   var rows = RANK.filter(function(r){
     if(saved.country.length && saved.country.indexOf(r[7]) < 0) return false;
-    if(!deptHit(r)) return false;
-    if(saved.major.length && saved.major.indexOf(r[9]) < 0) return false;
+    /* 勾了专业按专业过滤；只选科系（未勾专业）按整个科系过滤 */
+    if(saved.major.length){
+      if(saved.major.indexOf(r[9]) < 0) return false;
+    } else if(!deptHit(r)) return false;
     if(saved.degree.length && saved.degree.indexOf(r[10]) < 0) return false;
     return true;
   });
@@ -904,7 +1026,12 @@ function applyFilters(){
       return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], 'none');
     }).join('');
   } else {
-    box.innerHTML = '<div class="reserved"><div class="t">没有符合条件的院校</div><div class="s">换个筛选条件试试，或点「重置」清空</div></div>';
+    /* 无匹配时不展示「没有」空态，改为示例院校展示（2026-11-05 用户要求） */
+    box.innerHTML = '<div class="demotip">当前筛选暂无匹配院校 · 以下为示例院校</div>' +
+      RANK.slice(0, 5).map(function(r, i){
+        var no = (i + 1) < 10 ? '0' + (i + 1) : '' + (i + 1);
+        return rankRow([no, r[1], r[2], r[3], r[4], r[5], r[6]], 'none');
+      }).join('');
   }
 }
 // 本科榜单：按原小程序形式，只展示 校名 + offer 数 + 枚（不带排名）
@@ -942,6 +1069,22 @@ document.querySelectorAll('[data-go]').forEach(function(el){
 document.querySelectorAll('[data-back]').forEach(function(el){
   el.addEventListener('click', function(e){ e.stopPropagation(); go(el.dataset.back); });
 });
+document.getElementById('qdCard').addEventListener('click', function(){ go('pqd'); });
+// 全日制临时页（UI 与 p3 统一）：seg 切换榜单，长图直接在页面内滚动查看，默认艺术高中OFFER榜
+var QD_IMGS = ['img/qd-ysgz.jpg', 'img/qd-qrzxy.jpg'];
+function renderQd(){
+  var idx = document.querySelector('#qdSeg .sg.on').dataset.qd;
+  document.getElementById('qdBox').innerHTML =
+    '<img src="' + QD_IMGS[idx] + '" alt="' + (idx === '0' ? '艺术高中OFFER榜' : '全日制学院offer榜') + '（图片版，暂代）" style="width:100%;display:block">';
+}
+document.querySelectorAll('#qdSeg .sg').forEach(function(el){
+  el.addEventListener('click', function(){
+    if(el.classList.contains('on')) return;
+    document.querySelectorAll('#qdSeg .sg').forEach(function(s){ s.classList.toggle('on', s === el); });
+    renderQd();
+  });
+});
+renderQd();
 document.querySelectorAll('#regionSeg .sg').forEach(function(el){
   el.addEventListener('click', function(){
     if(curRegion === el.dataset.region) return;
@@ -1073,7 +1216,7 @@ function openSchool(row){
   document.getElementById('schName').textContent = row[1];
   document.getElementById('schRank').textContent = curRegion === 'us'
     ? ((row[5] === '—') ? ('QS 艺术学科 ' + row[6])
-       : (row[7] === 'TOP30艺术类' ? ('US News 艺术 ' + row[5]) : ('US News ' + row[5])))
+       : (row[7] === 'TOP30艺术类' ? ('2025专业排名 积分' + row[5]) : ('US News 2027 ' + row[5])))
     : ('QS ' + row[6]);
   var fav = document.getElementById('actFav');
   fav.className = 'sact tap'; fav.textContent = '♡ 收藏';
@@ -1163,22 +1306,23 @@ document.getElementById('smartGo').addEventListener('click', function(){
 
 var FOPTS = {
   country: ['英国','美国','亚洲','欧洲','澳洲','北美','中国香港','日本','韩国','新加坡','意大利','法国','加拿大'],
-  dept: ['工业交互','时尚','插画纯艺','游戏动画','空间','视觉传达','影视传媒','音乐','其他'],
+  dept: ['时尚科系','数字艺术与设计科系','AI空间未来科系','工业交互科系','艺术人文科系','游戏动画科系','影视传媒科系','音乐留学Music Plus','其他'],
   degree: ['本科','研究生','预科']
 };
 FOPTS.wallDept = FOPTS.dept;     // offer 墙-科系筛选（复用筛选页）
 FOPTS.wallDegree = FOPTS.degree; // offer 墙-学位筛选
 
-// 科系→专业映射（按斯芬克官方科系体系，音乐暂未配置专业）
+// 科系→专业映射（科系名=斯芬克官方科系体系全称；音乐留学Music Plus 暂未配置专业）
 var MAJOR_MAP = {
-  '工业交互': ['工业设计','交互设计','产品设计','人机交互','服务设计','家具设计','配饰设计','穿戴产品设计','用户体验设计','交通工具设计','汽车设计','产品/交互装置','创意编程','信息体验设计','交互媒体实践','情报设计（交叉学科）','综合设计（交叉学科）'],
-  '时尚': ['服装设计','珠宝设计','纺织品设计','面料设计','时尚管理','奢侈品管理','设计管理','时尚买手','时尚传播','时尚造型','戏剧服装设计','时尚摄影','男装设计','女装设计','鞋品设计'],
-  '插画纯艺': ['插画设计','儿童插画','绘画','装置艺术','版画/油画/绘画','雕塑','策展','玻璃艺术','木艺','水墨','陶瓷','摄影/写真','商业摄影','艺术疗愈','艺术管理/教育','当代艺术/实践','前端艺术表现','日本画','艺术史/美术史'],
-  '游戏动画': ['游戏设计','游戏美术','娱乐设计','原画设计','计算机动画','实验动画','角色动画','2D/3D 动画','定格动画','ACG/动漫设计/漫画','特效设计','游戏策划','电脑游戏编程'],
-  '空间': ['建筑设计','景观设计','城市规划','景观管理','景观研究','室内设计','城市设计','环境设计','城市健康发展','可持续城市设计','舞美设计','展示设计'],
-  '视觉传达': ['平面设计','视觉传达设计','视觉艺术','新媒体设计','多媒体设计','数字艺术与媒体设计','治愈设计（交叉学科）','基础设计','包装设计','品牌设计'],
-  '影视传媒': ['电影制作','电影研究','影视制作','制片人','声效','剪辑','摄影','灯光照明设计','导演/剧本','导演/监督','电视电影','电影制作—纪录片','创意制作—电影'],
-  '音乐': []
+  '工业交互科系': ['插画设计','产品设计','纯艺','服务设计','工业科系其他','工业设计','工艺品设计','互动媒体','家具设计','交互科系其他','交互设计','交互艺术','汽车设计','人机交互','设计管理','用户体验设计','综合创新设计'],
+  '时尚科系': ['博物馆管理','传播学','创新管理','纺织面辅料设计','纺织品设计','服装设计','配饰设计','商业与实践','时尚传播','时尚创意','时尚管理','时尚管理/买手','时尚设计','时尚摄影','时尚消费心理','时尚·艺术管理','时尚造型','戏服设计','珠宝设计'],
+  '艺术人文科系': ['版画','策展设计','插画科系其他','插画设计','纯艺','纯艺科系其他','雕塑','绘画','摄影/写真','摄影制作','艺术管理/教育','艺术史','艺术史/美学/东洋美术史','艺术治疗','油画','装置艺术'],
+  '游戏动画科系': ['2D动画','3D动画','ACG/卡通/漫画设计','动画科系其他','动画设计','动漫','概念美术设计','角色','漫画','特效','游戏策划','游戏动画','游戏开发','游戏科系其他','游戏美术','游戏设计'],
+  'AI空间未来科系': ['产品设计','城市规划','城市设计','环境设计','建筑设计','建筑与城市设计','景观建筑','景观设计','空间科系其他','室内设计','舞美设计','舞台设计'],
+  '数字艺术与设计科系': ['纯艺','广告设计','基础设计','交互设计','平面设计','情报设计 数字媒体','设计专业','视觉传达','视觉艺术','数字媒体','数字媒体科系其他','数字媒体设计','新媒体设计','造型教育'],
+  '影视传媒科系': ['传媒','电影研究','电影制作','媒体','影视传媒科系其他','制片人'],
+  '音乐留学Music Plus': ['巴松演奏','传统美声','传统作曲','大提琴演奏','单簧管演奏','钢琴演奏','歌曲写作','歌曲/作·曲/songwriting','古典吉他','古典萨克斯','爵士钢琴','爵士吉他','爵士架子鼓','流行演唱','录音艺术','器乐-双簧管','器乐-小号','器乐-中提琴','声乐艺术指导','声音设计','舞蹈','舞蹈编导','舞蹈表演','舞蹈教育','西洋打击乐','戏剧表演','小提琴演奏','艺术指导','艺术管理','音乐技术','音乐教育','音乐剧','音乐学','音乐制作','音乐治疗','影视配乐','长笛演奏'],
+  '其他': ['文物修复','博物馆/美术馆管理','文化遗产研究','设计史与理论','工艺美术','手工艺设计','书法','声音艺术','舞蹈/编舞']
 };
 var FSUB = { country:{ '亚洲':['中国香港','日本','韩国','新加坡'], '欧洲':['英国','意大利','法国'], '澳洲':['澳大利亚','新西兰'], '北美':['美国','加拿大'] } };
 var FLABEL = { country:'国家', dept:'科系+专业', degree:'学位', wallDept:'科系+专业', wallDegree:'学位' };
@@ -1187,6 +1331,8 @@ var fkey = 'country';
 var draft = [];      // 当前维度（科系/国家/学位…）的勾选草稿
 var draftM = [];     // 科系维度下的专业勾选草稿
 var fbodyFrom = 'p1';
+var curDeptView = '全部';   // 双栏联动：左栏当前查看的科系
+var fQuery = '';            // 科系+专业：右栏搜索关键字
 
 function fHero(){
   return '<div class="fhero"><svg viewBox="0 0 200 150" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block">' +
@@ -1213,6 +1359,137 @@ function paintFilter(){
   var list = FOPTS[fkey];
   var subs = (fkey === 'country') ? FSUB.country : null;
   var isDept = (fkey === 'dept') || (fkey === 'wallDept');
+  var box = document.getElementById('fRight');
+  var sheet = document.getElementById('fSheet');
+  var pfEl = document.getElementById('pf');
+
+  /* 科系+专业：双栏联动（方案三）——无黑边栏，顶栏 ✕/标题/完成，左栏科系导航，右栏专业 chips */
+  if(isDept){
+    pfEl.classList.add('deptmode');
+    sheet.style.display = '';
+    document.getElementById('fSheetTitle').textContent = FLABEL[fkey];
+    box = document.getElementById('fSheetBody');
+  } else {
+    pfEl.classList.remove('deptmode');
+    sheet.style.display = 'none';
+  }
+
+  /* 科系+专业：双栏联动（方案三）——左栏科系导航，右栏该科系专业 chips，跨科系累计多选 */
+  if(isDept){
+    function chip(m){
+      return '<div class="fchip' + (draftM.indexOf(m) > -1 ? ' on' : '') + '" data-m="' + m + '">' + m + '</div>';
+    }
+    var nav = '<div class="flv-it' + (curDeptView === '全部' ? ' on' : '') + '" data-v="全部">全部</div>';
+    list.forEach(function(d){
+      var ms = MAJOR_MAP[d] || [];
+      var n = ms.filter(function(m){ return draftM.indexOf(m) > -1; }).length;
+      var has = (n > 0 || draft.indexOf(d) > -1) ? ' has' : '';
+      nav += '<div class="flv-it' + (curDeptView === d ? ' on' : '') + (draft.indexOf(d) > -1 ? ' sel' : '') + has + '" data-v="' + d + '">' + d + '</div>';
+    });
+    var right = '';
+    function rightHtml(){
+      var q = fQuery.trim().toLowerCase();
+      /* 搜索态：跨全部科系搜专业，忽略当前左栏选中项 */
+      if(q){
+        var any = false, h = '';
+        list.forEach(function(d){
+          var ms = (MAJOR_MAP[d] || []).filter(function(m){ return m.toLowerCase().indexOf(q) > -1; });
+          if(!ms.length) return;
+          any = true;
+          h += '<div class="fgrp">' + d + '</div><div class="fcrow">' + ms.map(chip).join('') + '</div>';
+        });
+        return h || '<div class="ftip2" style="padding:6px 0 10px">没有匹配的专业</div>';
+      }
+      if(curDeptView === '全部'){
+        var anyM = false, h = '';
+        list.forEach(function(d){
+          var ms = MAJOR_MAP[d] || [];
+          if(!ms.length) return;
+          anyM = true;
+          h += '<div class="fgrp">' + d + '</div><div class="fcrow">' + ms.map(chip).join('') + '</div>';
+        });
+        return h || '<div class="ftip2">暂无可选专业</div>';
+      }
+      var ms = MAJOR_MAP[curDeptView] || [];
+      if(ms.length){
+        return '<div class="fcrow">' + ms.map(chip).join('') + '</div>';
+      }
+      return '<div class="fcrow"><div class="fchip' + (draft.indexOf(curDeptView) > -1 ? ' on' : '') + '" data-whole="1">整个' + curDeptView + '</div></div>';
+    }
+    var total = draftM.length + draft.length;
+    box.innerHTML = '<div class="fcolwrap"><div class="fcols"><div class="flv">' + nav + '</div>' +
+      '<div class="frvs"><div class="fsb"><svg class="ic fsb-ic"><use href="#i-search"/></svg>' +
+      '<input id="fSearch" type="text" placeholder="手动输入专业查询" value="' + fQuery + '">' +
+      (fQuery ? '<span class="fsb-x" id="fSearchX">✕</span>' : '') + '</div>' +
+      '<div id="fRvsList">' + rightHtml() + '</div></div></div>' +
+      '<div class="fselbar"><span class="k">已选</span><span class="v">' +
+      (total ? (draftM.length ? draftM.length + ' 个专业' : '') +
+        (draftM.length && draft.length ? ' + ' : '') +
+        (draft.length ? draft.length + ' 个科系' : '') : '0 个专业') +
+      '</span><span class="fclear' + (total ? '' : ' dis') + '">清空</span></div></div>';
+    box.scrollTop = 0;
+    box.querySelectorAll('.flv-it').forEach(function(el){
+      el.addEventListener('click', function(){
+        var v = el.dataset.v;
+        if(v === '全部'){ draft = []; curDeptView = '全部'; }
+        else {
+          /* 科系单选：点选替换上一个科系，再点同一个取消；同时切换右侧专业列表 */
+          curDeptView = v;
+          var di = draft.indexOf(v);
+          if(di > -1) draft = [];
+          else draft = [v];
+        }
+        paintFilter();
+      });
+    });
+    function bindChips(){
+      box.querySelectorAll('.fchip[data-m]').forEach(function(el){
+        el.addEventListener('click', function(){
+          var v = el.dataset.m, i = draftM.indexOf(v);
+          if(i > -1) draftM.splice(i, 1); else draftM.push(v);
+          paintFilter();
+        });
+      });
+      box.querySelectorAll('.fchip[data-whole]').forEach(function(el){
+        el.addEventListener('click', function(){
+          var v = curDeptView, i = draft.indexOf(v);
+          /* 与左栏单选口径一致：勾上即只选该科系，再点取消 */
+          if(i > -1) draft = []; else draft = [v];
+          paintFilter();
+        });
+      });
+    }
+    bindChips();
+    /* 搜索框：输入即查，只重绘右栏列表，不打断输入焦点 */
+    function bindSx(sx){
+      sx.addEventListener('click', function(){
+        fQuery = ''; inp.value = '';
+        box.querySelector('#fRvsList').innerHTML = rightHtml();
+        bindChips();
+        sx.remove();
+      });
+    }
+    var inp = box.querySelector('#fSearch');
+    inp.addEventListener('input', function(){
+      fQuery = inp.value;
+      box.querySelector('#fRvsList').innerHTML = rightHtml();
+      bindChips();
+      var sx = inp.parentNode.querySelector('.fsb-x');
+      if(fQuery && !sx){
+        sx = document.createElement('span');
+        sx.className = 'fsb-x'; sx.id = 'fSearchX'; sx.textContent = '✕';
+        inp.parentNode.appendChild(sx);
+        bindSx(sx);
+      } else if(!fQuery && sx){ sx.remove(); }
+    });
+    inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') inp.blur(); });
+    var sx0 = box.querySelector('#fSearchX');
+    if(sx0) bindSx(sx0);
+    var clr = box.querySelector('.fclear');
+    if(clr) clr.addEventListener('click', function(){ draft = []; draftM = []; paintFilter(); });
+    return;
+  }
+
   function optHtml(v){
     if(isDept){
       var n = (MAJOR_MAP[v] || []).filter(function(m){ return draftM.indexOf(m) > -1; }).length;
@@ -1227,9 +1504,7 @@ function paintFilter(){
   function subHtml(v){
     if(draft.indexOf(v) < 0) return '';
     var ms = MAJOR_MAP[v] || [];
-    if(!ms.length){
-      return '<div class="fsub"><div class="ftip2">该科系暂不细分专业，勾选即筛选整个科系</div></div>';
-    }
+    if(!ms.length) return '';
     return '<div class="fsub"><div class="ftip2">可再勾选专业（不选＝全部专业，支持多选）</div>' +
       ms.map(function(m){
         return '<div class="fmj' + (draftM.indexOf(m) > -1 ? ' on' : '') + '" data-v="' + m + '">' + m + '<span class="cb2"></span></div>';
@@ -1249,7 +1524,6 @@ function paintFilter(){
       html += optHtml(g);
     });
   }
-  var box = document.getElementById('fRight');
   box.innerHTML = html;
   box.scrollTop = 0;
   box.querySelectorAll('.fopt, .fall').forEach(function(el){
@@ -1284,12 +1558,10 @@ function openFilter(k, from){
   draft = (saved[k] || []).slice();
   draftM = [];
   if(k === 'dept' || k === 'wallDept'){
-    /* 只保留属于当前已勾选科系的专业，避免跨页残留导致预勾选混乱 */
-    var pool = [];
-    (draft.length ? draft : FOPTS.dept).forEach(function(d){
-      (MAJOR_MAP[d] || []).forEach(function(m){ if(pool.indexOf(m) < 0) pool.push(m); });
-    });
-    draftM = (saved.major || []).filter(function(m){ return pool.indexOf(m) > -1; });
+    /* 双栏联动：专业勾选跨科系累计，与科系级勾选（音乐/其他）相互独立 */
+    draftM = (saved.major || []).slice();
+    curDeptView = '全部';
+    fQuery = '';
   }
   fbodyFrom = from || 'p1';
   paintFilter();
@@ -1303,10 +1575,10 @@ function filterLabel(k, arr){
 }
 
 function commitFilter(){
-  var prev = (saved[fkey] || []).join('|');
+  var isDeptKey = (fkey === 'dept') || (fkey === 'wallDept');
   saved[fkey] = draft.slice();
-  /* 科系维度：专业与科系一并提交（未勾选任何专业＝该科系全部专业） */
-  if(fkey === 'dept' || fkey === 'wallDept'){
+  /* 科系维度：专业与科系一并提交（双栏联动下两者独立累计） */
+  if(isDeptKey){
     saved.major = draftM.slice();
     var mb = document.querySelector('.fbtn[data-f="major"]');
     if(mb){
@@ -1316,28 +1588,19 @@ function commitFilter(){
       mb.classList.toggle('chosen', saved.major.length > 0);
     }
   }
-  if(fkey === 'dept' && saved.dept.join('|') !== prev){
-    /* 科系变更时清掉不属于新科系的专业，避免出现矛盾组合 */
-    var pool = [];
-    saved.dept.forEach(function(d){ (MAJOR_MAP[d] || []).forEach(function(m){ if(pool.indexOf(m) < 0) pool.push(m); }); });
-    saved.major = saved.major.filter(function(m){ return pool.indexOf(m) > -1; });
-    if(!saved.dept.length) saved.major = [];
-    var mb2 = document.querySelector('.fbtn[data-f="major"]');
-    if(mb2){
-      mb2.querySelector('.lbl').textContent = saved.major.length
-        ? (saved.major.length === 1 ? saved.major[0] : saved.major[0] + ' 等' + saved.major.length + '项')
-        : FLABEL.major;
-      mb2.classList.toggle('chosen', saved.major.length > 0);
-    }
-  }
   var dbtn = document.querySelector('.fbtn[data-f="' + fkey + '"]');
   if(dbtn){
-    var txt = filterLabel(fkey, saved[fkey]);
-    if((fkey === 'dept') && saved.major.length){
-      txt += ' · ' + (saved.major.length === 1 ? saved.major[0] : saved.major.length + '个专业');
+    var txt;
+    if(isDeptKey){
+      var parts = [];
+      if(saved[fkey].length) parts.push(filterLabel(fkey, saved[fkey]));
+      if(saved.major.length) parts.push(saved.major.length === 1 ? saved.major[0] : saved.major.length + '个专业');
+      txt = parts.join(' · ') || FLABEL[fkey];
+    } else {
+      txt = filterLabel(fkey, saved[fkey]);
     }
     dbtn.querySelector('.lbl').textContent = txt;
-    dbtn.classList.toggle('chosen', saved[fkey].length > 0);
+    dbtn.classList.toggle('chosen', saved[fkey].length > 0 || (isDeptKey && saved.major.length > 0));
   }
   if(fkey === 'wallDept' || fkey === 'wallDegree'){
     var wb = document.querySelector('.wfbtn[data-wf="' + fkey + '"]');
@@ -1365,6 +1628,8 @@ document.querySelectorAll('.fbtn').forEach(function(b){
 });
 document.querySelector('.freset').addEventListener('click', resetFilters);
 document.getElementById('fDone').addEventListener('click', commitFilter);
+document.getElementById('fSheetDone').addEventListener('click', commitFilter);
+document.getElementById('fSheetX').addEventListener('click', function(){ go(fbodyFrom); });
 document.getElementById('fBack').addEventListener('click', function(){ go(fbodyFrom); });
 document.getElementById('fNavBack').addEventListener('click', function(){ go(fbodyFrom); });
 
