@@ -92,6 +92,15 @@
   tbody tr:hover{background:#fafbfe}
   tbody tr:last-child td{border-bottom:none}
 
+  .sort-cell{display:flex;align-items:center;gap:6px}
+  .grip{flex:0 0 auto;color:#aab2bf;cursor:grab;opacity:.9;transition:.15s;user-select:none;display:block}
+  tbody tr:hover .grip{opacity:1;color:#6f7887}
+  tbody tr[draggable="false"] .grip{opacity:.22;cursor:not-allowed}
+  tbody tr[draggable="false"]:hover .grip{color:#aab2bf;opacity:.25}
+  tbody tr.dragging{opacity:.45}
+  tbody tr.dragging{opacity:.35}
+  tbody tr.drop-before td{box-shadow:inset 0 2px 0 var(--brand)}
+  tbody tr.drop-after td{box-shadow:inset 0 -2px 0 var(--brand)}
   .sortno{display:inline-flex;align-items:center;height:28px;padding:0 2px;border-radius:5px;background:transparent;color:var(--t1,#2b3242);
     font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:500;transition:.15s;cursor:pointer}
   .sortno:hover{color:var(--brand);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted}
@@ -242,20 +251,36 @@
   .crumb .lnk.link:hover{color:var(--brand)}
   .btn.lg{height:34px;padding:0 22px;font-size:13.5px}
 
-  /* ---- 院校选择器（可搜索下拉） ---- */
+  /* ---- 院校选择器（多选 + 可搜索） ---- */
   .cbx{position:relative}
-  .cbx .inp{padding-right:32px}
-  .cbx-arw{position:absolute;right:11px;top:17px;color:#b8bec9;pointer-events:none;transition:.15s}
+  .ms{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-height:34px;padding:4px 30px 4px 8px;
+    border:1px solid #dcdfe6;border-radius:6px;background:#fff;cursor:text;transition:.15s}
+  .ms:focus-within{border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,108,246,.1)}
+  .ms-tags{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+  .ms-tags:empty{display:none}
+  .chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 5px 0 8px;background:#eef3fd;border-radius:4px;
+    font-size:12.5px;color:#2c3e5d;max-width:100%}
+  .chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+  .chip i{font-style:normal;font-size:13px;line-height:1;color:#9aa3b2;cursor:pointer;padding:0 2px}
+  .chip i:hover{color:#e05252}
+  .ms-inp{flex:1 1 88px;min-width:88px;height:24px;border:0;outline:0;background:transparent;font-size:13px;color:var(--t1);padding:0}
+  .ms-inp::placeholder{color:#b9bec7}
+  .cbx-arw{position:absolute;right:11px;top:11px;color:#b8bec9;pointer-events:none;transition:.15s}
   .cbx.open .cbx-arw{transform:rotate(180deg);color:var(--brand)}
-  .cbx-pop{position:absolute;left:0;top:calc(100% + 5px);z-index:60;display:none;width:300px;max-width:calc(100vw - 60px);
-    background:#fff;border:1px solid #e4e7ee;border-radius:8px;padding:4px;max-height:250px;overflow-y:auto;
+  .cbx-pop{position:absolute;left:0;top:calc(100% + 5px);z-index:60;display:none;width:100%;min-width:320px;max-width:calc(100vw - 60px);
+    background:#fff;border:1px solid #e4e7ee;border-radius:8px;padding:4px;max-height:214px;overflow-y:auto;
     box-shadow:0 10px 28px rgba(16,24,40,.14)}
   .cbx.open .cbx-pop{display:block}
   .cbx-pop::-webkit-scrollbar{width:6px}
   .cbx-pop::-webkit-scrollbar-thumb{background:#dcdfe6;border-radius:3px}
-  .cbx-item{display:flex;align-items:center;padding:9px 10px;border-radius:6px;cursor:pointer;min-width:0}
+  .cbx-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;min-width:0}
   .cbx-item:hover,.cbx-item.act{background:#f3f7ff}
+  .cbx-item .cbox{flex:0 0 auto;width:14px;height:14px;border:1px solid #cfd5e0;border-radius:3px;background:#fff;position:relative}
+  .cbx-item.on .cbox{background:var(--brand);border-color:var(--brand)}
+  .cbx-item.on .cbox::after{content:'';position:absolute;left:4.5px;top:1.5px;width:3.5px;height:7px;
+    border:1.5px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
   .cbx-item .n{font-size:13px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+  .cbx-item.on .n{color:var(--brand);font-weight:600}
   .cbx-item mark{background:#fff2c2;color:inherit;padding:0;border-radius:2px}
   .cbx-empty{padding:16px 10px;text-align:center;font-size:12px;color:#aab0bb}
   .inp[readonly]{background:#f7f8fa;color:#6b7280;cursor:default}
@@ -434,11 +459,14 @@
               <div class="fp-label"><span class="req">*</span>院校名称：</div>
               <div class="fp-ctrl">
                 <div class="cbx" id="nameCbx">
-                  <input class="inp" id="fName" placeholder="点击选择，或输入关键词搜索院校" autocomplete="off">
+                  <div class="ms" id="nameBox">
+                    <div class="ms-tags" id="nameTags"></div>
+                    <input class="ms-inp" id="fName" placeholder="搜索或选择院校" autocomplete="off">
+                  </div>
                   <svg class="cbx-arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   <div class="cbx-pop" id="namePop"></div>
                 </div>
-                <div class="fp-tip">关联后台院校库，只能从库中选择；可选院校跟随上方榜单归属与分组标签，支持输入关键词快速定位</div>
+                <div class="fp-tip">关联后台院校库，只能从库中选择；列表按榜单归属展示该榜单下的全部院校，可一次勾选多所</div>
               </div>
             </div>
 
@@ -453,7 +481,7 @@
                     滚动选择
                   </button>
                 </div>
-                <div class="fp-tip">可直接输入数字，也可点「滚动选择」；决定前端 01 / 02 / 03 的顺序，调整后其余院校自动顺延</div>
+                <div class="fp-tip">可直接输入数字，也可点「滚动选择」；决定该院校在小程序榜单里的先后位置，调整后其余院校自动顺延</div>
               </div>
             </div>
 
@@ -650,7 +678,24 @@ function autoColor(d){
 }
 
 function regionPool(region){ return DATA.filter(d => d.region === region); }
-function sortNoOf(d){ return regionPool(d.region).indexOf(d) + 1; }
+
+/* 排序池 = 当前筛选维度（榜单 [+ 分组]）锁定的院校集合。
+   筛选出某个分类后，序号、拖拽、精确调序都在这个池内进行。 */
+function viewPool(region, group){
+  const r = region === undefined ? state.region : region;
+  const g = group === undefined ? state.group : group;
+  if(r === 'all') return [];
+  return DATA.filter(d => d.region === r && (g === 'all' || d.group === g));
+}
+function sortNoOf(d){
+  if(state.region !== 'all'){
+    const i = viewPool().indexOf(d);
+    if(i > -1) return i + 1;
+  }
+  return regionPool(d.region).indexOf(d) + 1;
+}
+/* 拖拽是否可用：必须先锁定榜单，且没用关键词搜索 */
+function canDrag(){ return state.region !== 'all' && !state.kw; }
 
 /* =========================================================
    状态
@@ -688,13 +733,16 @@ function renderTable(){
 
   /* 表体 */
   if(!pageRows.length){
-    $('#tbody').innerHTML = `<tr><td colspan="8"><div class="empty">没有匹配的院校，换个条件试试</div></td></tr>`;
+    $('#tbody').innerHTML = `<tr><td colspan="7"><div class="empty">没有匹配的院校，换个条件试试</div></td></tr>`;
   } else {
     $('#tbody').innerHTML = pageRows.map(d => {
       const no = sortNoOf(d);
-      return `<tr data-id="${d.id}">
+      return `<tr data-id="${d.id}" draggable="${canDrag()}">
         <td>
-          <button class="sortno" data-sort="${d.id}" title="点击调整顺序">${no}</button>
+          <div class="sort-cell">
+            <svg class="grip" width="8" height="14" viewBox="0 0 8 14" fill="currentColor" aria-label="拖动排序"><title>${canDrag() ? '拖动调整本分类内顺序' : '先筛选到具体榜单再拖动排序'}</title><circle cx="2" cy="3" r="1.1"/><circle cx="6" cy="3" r="1.1"/><circle cx="2" cy="7" r="1.1"/><circle cx="6" cy="7" r="1.1"/><circle cx="2" cy="11" r="1.1"/><circle cx="6" cy="11" r="1.1"/></svg>
+            <button class="sortno" data-sort="${d.id}" title="点击精确调整顺序">${no}</button>
+          </div>
         </td>
         <td>
           <div class="sch">
@@ -790,14 +838,22 @@ document.addEventListener('mousedown', e=>{
 /* =========================================================
    重排
    ========================================================= */
+/* 只在这个池占用的槽位之间换位置：池外的院校序号完全不动 */
+function reorderIn(id, newNo, pool){
+  const d = DATA.find(x => x.id === id);
+  if(!d || !pool || !pool.length) return;
+  if(!pool.some(x => x.id === id)) return;
+  const arr = pool.filter(x => x.id !== id);
+  arr.splice(Math.max(0, Math.min(newNo - 1, arr.length)), 0, d);
+  const slots = pool.map(x => DATA.indexOf(x)).sort((a, b) => a - b);
+  slots.forEach((s, i) => { DATA[s] = arr[i]; });
+}
+
+/* 整榜单重排（表单保存用） */
 function reorder(id, newNo){
   const d = DATA.find(x => x.id === id);
-  const region = d.region;
-  const others = DATA.filter(x => x.region !== region);
-  const pool = DATA.filter(x => x.region === region);
-  pool.splice(pool.indexOf(d), 1);
-  pool.splice(Math.min(newNo-1, pool.length), 0, d);
-  DATA = region === 'us' ? [...pool, ...others] : [...others, ...pool];
+  if(!d) return;
+  reorderIn(id, newNo, regionPool(d.region));
 }
 
 /* =========================================================
@@ -807,23 +863,20 @@ function openForm(id){
   editingId = id;
   const d = id ? DATA.find(x => x.id === id) : null;
   editing = d
-    ? { ...d }
-    : { name:'', en:'', linkId:null, init:'', color:PALETTE[0], region: state.region==='all' ? 'us' : state.region,
+    ? { ...d, names:[d.name] }
+    : { name:'', en:'', names:[], init:'', color:PALETTE[0], region: state.region==='all' ? 'us' : state.region,
         group:'', sys:'us-news', rank:'', tie:false, offers:'', status:1 };
 
-  /* 反查院校库，确认这条记录关联的是库里哪一所 */
-  const libHit = SCHOOL_LIB.find(s => s.name === editing.name);
-  editing.linkId = libHit ? libHit.name : null;
   closeNamePop();
 
   $('#mTitle').textContent = id ? '编辑院校' : '添加院校';
-  $('#fName').value = editing.name;
+  $('#fName').value = '';
   $('#stOn').checked = !!editing.status;
   $('#stOff').checked = !editing.status;
   $('#fRegionSel').value = editing.region;
-
   renderGroupSel();
   updateSortBtn();
+  renderTags();
 
   /* 切换到表单页 */
   $('#crumb').innerHTML = '<span class="lnk link" data-back>院校</span> / ' +
@@ -849,15 +902,18 @@ function renderGroupSel(){
   ).join('');
 }
 
+/* 表单里的排序号 = 该院校在「榜单 + 分组」池里的第几位，与列表页看到的号一致 */
+function formPool(){
+  return DATA.filter(d => d.region === editing.region && d.group === editing.group);
+}
 function updateSortBtn(){
-  const pool = editingId
-    ? regionPool(editing.region).length
-    : regionPool(editing.region).length + 1;
-  let no = editingId ? regionPool(editing.region).findIndex(x=>x.id===editingId) + 1 : pool;
-  if(editingId && editing.region !== DATA.find(x=>x.id===editingId).region) no = pool;
+  const size = formPool().length;
+  let no = editingId ? formPool().findIndex(x => x.id === editingId) + 1 : size + 1;
+  if(no <= 0) no = size + 1;   /* 换了榜单或分组：排到新分类末尾 */
+  no = Math.max(1, no);
   $('#fSortInput').value = no;
   editing._sortNo = no;
-  editing._sortMax = pool;
+  editing._sortMax = Math.max(1, size + (editingId ? 0 : 1));
 }
 
 /* =========================================================
@@ -898,6 +954,73 @@ function renderGroupFilter(){
   state.group = 'all';
 }
 
+/* 拖拽调序 */
+let dragId = null;
+const clearDropMarks = () => {
+  document.querySelectorAll('#tbody tr.drop-before,#tbody tr.drop-after')
+    .forEach(x => x.classList.remove('drop-before','drop-after'));
+};
+$('#tbody').addEventListener('dragstart', e=>{
+  const tr = e.target.closest('tr[data-id]');
+  if(!tr) return;
+  if(!canDrag()){
+    e.preventDefault();
+    toast(state.region === 'all'
+      ? '先在顶部筛选里选定「美本」或「英国·港新」，再拖动调整顺序'
+      : '搜索状态下无法拖动排序，请先清空关键词');
+    return;
+  }
+  dragId = +tr.dataset.id;
+  tr.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(dragId));
+});
+$('#tbody').addEventListener('dragover', e=>{
+  if(dragId === null) return;
+  const tr = e.target.closest('tr[data-id]');
+  clearDropMarks();
+  if(!tr) return;
+  const src = DATA.find(d => d.id === dragId);
+  const tgt = DATA.find(d => d.id === +tr.dataset.id);
+  if(!src || !tgt || tgt.id === src.id){ e.dataTransfer.dropEffect = 'none'; return; }
+  const poolIds = viewPool().map(x => x.id);
+  if(poolIds.indexOf(tgt.id) < 0){ e.dataTransfer.dropEffect = 'none'; return; }
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const r = tr.getBoundingClientRect();
+  tr.classList.add(e.clientY > r.top + r.height / 2 ? 'drop-after' : 'drop-before');
+});
+$('#tbody').addEventListener('dragleave', e=>{
+  if(!e.relatedTarget || !e.relatedTarget.closest('#tbody')) clearDropMarks();
+});
+$('#tbody').addEventListener('drop', e=>{
+  if(dragId === null) return;
+  e.preventDefault();
+  const tr = e.target.closest('tr[data-id]');
+  const mark = tr ? (tr.classList.contains('drop-after') ? 'after'
+             : tr.classList.contains('drop-before') ? 'before' : null) : null;
+  const id = dragId;
+  clearDropMarks();
+  dragId = null;
+  if(!tr || !mark) return;
+  const targetId = +tr.dataset.id;
+  if(targetId === id) return;
+  const src = DATA.find(d => d.id === id);
+  const pool = viewPool().filter(x => x.id !== id);
+  const ti = pool.findIndex(x => x.id === targetId);
+  if(ti < 0) return;
+  const newNo = (mark === 'after' ? ti + 1 : ti) + 1;
+  reorderIn(id, newNo, viewPool());
+  renderAll();
+  const scope = state.group === 'all' ? REGION_LABEL[src.region] : state.group;
+  toast(`「${src.name}」已排到「${scope}」第 ${newNo} 位`);
+});
+$('#tbody').addEventListener('dragend', ()=>{
+  document.querySelectorAll('#tbody tr.dragging').forEach(x => x.classList.remove('dragging'));
+  clearDropMarks();
+  dragId = null;
+});
+
 /* 表格委托 */
 $('#tbody').addEventListener('click', e=>{
   const sortBtn = e.target.closest('[data-sort]');
@@ -925,15 +1048,16 @@ function trySort(id, anchor){
     toast('先在上方筛选里选择「美本」或「英国·港新」，再调整顺序');
     return;
   }
-  if(state.group !== 'all' || state.kw){
-    toast('分组筛选状态下无法调序，请选择「全部分组」并清空搜索');
+  if(!canDrag()){
+    toast('搜索状态下无法调序，请先清空关键词');
     return;
   }
-  const max = regionPool(d.region).length;
+  const max = viewPool().length;
   openPicker(anchor, max, sortNoOf(d), newNo=>{
-    reorder(id, newNo);
+    reorderIn(id, newNo, viewPool());
     renderAll();
-    toast(`「${d.name}」已移动到第 ${newNo} 位`);
+    const scope = state.group === 'all' ? REGION_LABEL[d.region] : state.group;
+    toast(`「${d.name}」已排到「${scope}」第 ${newNo} 位`);
   });
 }
 
@@ -957,7 +1081,7 @@ $('#crumb').addEventListener('click', e=>{
 
 
 /* 表单交互 */
-/* ---- 院校选择器 ---- */
+/* ---- 院校选择器（多选） ---- */
 const nameState = { open:false, active:-1, list:[], browsing:false };
 
 function escHtml(t){
@@ -971,18 +1095,11 @@ function markKw(text, q){
   return escHtml(raw.slice(0, i)) + '<mark>' + escHtml(raw.slice(i, i + q.length)) + '</mark>' + escHtml(raw.slice(i + q.length));
 }
 
+/* 院校库全量：按榜单归属过滤（不按分组收窄），已选中的也能在列表里取消 */
 function buildNameList(kw){
-  /* 院校名称跟着「榜单归属 + 分组标签」走：只列该分组名单里的院校 */
-  const seen = new Set(), pool = [];
-  DATA.forEach(d => {
-    if(d.region !== editing.region || d.group !== editing.group) return;
-    if(seen.has(d.name)) return;
-    seen.add(d.name);
-    pool.push({ name:d.name, region:d.region, group:d.group });
-  });
-  pool.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
-  if(!kw) return pool;
-  return pool.filter(s => s.name.toLowerCase().includes(kw));
+  let pool = SCHOOL_LIB.filter(s => s.region === editing.region);
+  if(kw) pool = pool.filter(s => s.name.toLowerCase().includes(kw));
+  return pool;
 }
 
 function renderNamePop(){
@@ -994,14 +1111,37 @@ function renderNamePop(){
   const pop = $('#namePop');
   if(!list.length){
     pop.innerHTML = '<div class="cbx-empty">' +
-      (q ? '该分组下没有匹配的院校' : '该分组下暂无可选院校') + '</div>';
+      (q ? '院校库中没有匹配的院校' : '该榜单下暂无可选院校') + '</div>';
     return;
   }
-  pop.innerHTML = list.map((s, i) =>
-    `<div class="cbx-item${i === nameState.active ? ' act' : ''}" data-i="${i}">
-      <span class="n">${markKw(s.name, q)}</span>
-    </div>`
+  const picked = new Set(editing.names);
+  const st = pop.scrollTop;
+  pop.innerHTML = list.map((s, i) => {
+    const on = picked.has(s.name);
+    return `<div class="cbx-item${on ? ' on' : ''}${i === nameState.active ? ' act' : ''}" data-i="${i}">
+      <i class="cbox"></i><span class="n">${markKw(s.name, q)}</span>
+    </div>`;
+  }).join('');
+  pop.scrollTop = st;
+}
+
+function renderTags(){
+  $('#nameTags').innerHTML = editing.names.map(n =>
+    `<span class="chip"><span>${escHtml(n)}</span><i data-x="${escHtml(n)}">×</i></span>`
   ).join('');
+  syncSortMax();
+}
+
+/* 排序号上限跟着已选数量走：批量添加时后面几所依次占位 */
+function syncSortMax(){
+  const pool = formPool().length;
+  /* 编辑态第一所就是原记录本身，不占新增位；新增态全部算新增 */
+  const extraN = editingId ? Math.max(0, editing.names.length - 1) : Math.max(1, editing.names.length);
+  editing._sortMax = Math.max(1, pool + extraN);
+  let v = parseInt($('#fSortInput').value, 10) || 1;
+  v = Math.max(1, Math.min(v, editing._sortMax));
+  $('#fSortInput').value = v;
+  editing._sortNo = v;
 }
 
 function openNamePop(){
@@ -1010,8 +1150,8 @@ function openNamePop(){
   nameState.browsing = true;
   nameState.active = -1;
   renderNamePop();
-  /* 展开时把当前已选院校滚进视野 */
-  const ci = nameState.list.findIndex(s => s.name === editing.name);
+  /* 展开时把第一个已选院校滚进视野 */
+  const ci = nameState.list.findIndex(s => editing.names.includes(s.name));
   const cur = ci > -1 ? $('#namePop .cbx-item[data-i="' + ci + '"]') : null;
   if(cur) requestAnimationFrame(()=>cur.scrollIntoView({ block:'center' }));
 }
@@ -1019,29 +1159,24 @@ function closeNamePop(){
   $('#nameCbx').classList.remove('open');
   nameState.open = false;
   nameState.active = -1;
+  $('#fName').value = '';   /* 搜索词不是值，关闭时清掉 */
 }
-function restoreName(){
-  $('#fName').value = editing.linkId ? editing.name : '';
-}
-function pickSchool(s){
-  editing.name = s.name;
-  editing.linkId = s.name;
-  $('#fName').value = s.name;
-  closeNamePop();
-  $('#fName').blur();
+function toggleSchool(s){
+  const i = editing.names.indexOf(s.name);
+  if(i > -1) editing.names.splice(i, 1);
+  else editing.names.push(s.name);
+  renderTags();
+  renderNamePop();
 }
 
-$('#fName').addEventListener('focus', ()=>{
+$('#fName').addEventListener('focus', ()=>{ if(!nameState.open) openNamePop(); });
+$('#fName').addEventListener('click', ()=>{ if(!nameState.open) openNamePop(); });
+$('#nameBox').addEventListener('click', e=>{
+  if(e.target.closest('[data-x]')) return;
+  $('#fName').focus();
   if(!nameState.open) openNamePop();
 });
-$('#fName').addEventListener('click', ()=>{
-  /* 输入框已聚焦时再点击不会触发 focus，这里补一次，避免关掉后点不开 */
-  if(!nameState.open) openNamePop();
-});
-$('#fName').addEventListener('input', e=>{
-  /* 手输后原选择失效，必须重新在列表中确认 */
-  editing.linkId = null;
-  editing.name = e.target.value;
+$('#fName').addEventListener('input', ()=>{
   if(!nameState.open) openNamePop();
   nameState.browsing = false;
   nameState.active = -1;
@@ -1061,23 +1196,33 @@ $('#fName').addEventListener('keydown', e=>{
     if(el) el.scrollIntoView({ block:'nearest' });
   } else if(e.key === 'Enter'){
     e.preventDefault();
-    const s = nameState.list[nameState.active];
-    if(s && !DATA.find(d => d.name === s.name && d.id !== editingId)) pickSchool(s);
+    const s = list[nameState.active] || (list.length === 1 ? list[0] : null);
+    if(s) toggleSchool(s);
+  } else if(e.key === 'Backspace' && !$('#fName').value && editing.names.length){
+    editing.names.pop(); renderTags(); renderNamePop();
   } else if(e.key === 'Escape'){
-    closeNamePop(); restoreName(); $('#fName').blur();
+    closeNamePop(); $('#fName').blur();
   }
 });
 $('#namePop').addEventListener('click', e=>{
   const it = e.target.closest('.cbx-item'); if(!it) return;
   const s = nameState.list[+it.dataset.i];
-  if(s) pickSchool(s);
+  if(s) toggleSchool(s);
+});
+$('#namePop').addEventListener('mousedown', e=>{
+  e.preventDefault();   /* 别让输入框先失焦 */
+});
+$('#nameTags').addEventListener('click', e=>{
+  const x = e.target.closest('[data-x]'); if(!x) return;
+  editing.names = editing.names.filter(n => n !== x.dataset.x);
+  renderTags();
+  if(nameState.open) renderNamePop();
 });
 
 document.addEventListener('mousedown', e=>{
   if(!nameState.open) return;
   if(e.target.closest('#nameCbx')) return;
   closeNamePop();
-  restoreName();
 });
 
 $('#fSortInput').addEventListener('input', e=>{
@@ -1091,23 +1236,23 @@ $('#fRegionSel').addEventListener('change', e=>{
   const nr = e.target.value;
   if(nr === editing.region) return;
   editing.region = nr;
-  /* 换榜单后原院校可能不属于该榜单，直接清空重选 */
-  const lib = SCHOOL_LIB.find(s => s.name === editing.name);
-  if(!lib || lib.region !== nr){
-    editing.name = '';
-    editing.linkId = null;
-    $('#fName').value = '';
-    closeNamePop();
-  }
+  /* 换榜单后，不属于该榜单的院校自动剔除 */
+  const kept = editing.names.filter(nm => {
+    const s = SCHOOL_LIB.find(x => x.name === nm);
+    return s && s.region === nr;
+  });
+  const changed = kept.length !== editing.names.length;
+  editing.names = kept;
   editing.group = '';
   renderGroupSel();
   updateSortBtn();
+  if(changed) renderTags();
+  if(nameState.open) renderNamePop();
 });
 
 $('#fGroupSel').addEventListener('change', e=>{
   editing.group = e.target.value;
-  /* 分组变了，可选院校名单跟着变 */
-  if(nameState.open) renderNamePop();
+  updateSortBtn();
 });
 
 $('#stOn').addEventListener('change', ()=>{ editing.status = 1; });
@@ -1123,48 +1268,74 @@ $('#fSortBtn').addEventListener('click', function(){
 /* 保存 */
 $('#mSave').addEventListener('click', ()=>{
   if(!editing.group){ toast('请选择分组标签'); $('#fGroupSel').focus(); return; }
-  if(!editing.linkId){
+  if(!editing.names.length){
     toast('请从院校库中选择院校');
     $('#fName').focus(); openNamePop();
     return;
   }
-  /* 院校库全量可选，但一所院校只能归属一个榜单，重复的在保存时拦下 */
-  const dup = DATA.find(d => d.name === editing.name && d.id !== editingId);
-  if(dup){ toast('该院校已在' + REGION_LABEL[dup.region] + '榜单中'); return; }
 
-  const _max = editingId
-    ? Math.max(1, regionPool(editing.region).length)
-    : regionPool(editing.region).length + 1;
+  const orig = editingId ? DATA.find(x => x.id === editingId) : null;
+  const origName = orig ? orig.name : null;
+
+  /* 已在榜的其他院校自动跳过；全部重复才拦下 */
+  const dups = editing.names.filter(nm => nm !== origName &&
+    DATA.some(d => d.name === nm && d.id !== editingId));
+  if(dups.length === editing.names.length){
+    toast('所选院校都已在榜单中');
+    return;
+  }
+  const fresh = editing.names.filter(nm => !dups.includes(nm));  /* 原院校 + 新增院校 */
+  const skipTip = dups.length ? '，跳过 ' + dups.length + ' 所已在榜' : '';
+
+  /* 编辑态：原院校仍被选中就写回它自己，否则用第一所替换；其余都算新增 */
+  const leadName = editingId ? (fresh.includes(origName) ? origName : fresh[0]) : null;
+  const extra = editingId ? fresh.filter(nm => nm !== leadName) : fresh;
+
+  const _max = formPool().length + extra.length;
   let _no = parseInt(editing._sortNo, 10) || 1;
   _no = Math.max(1, Math.min(_no, _max));
   editing._sortNo = _no;
 
+  const { _sortNo, _sortMax, names, id: _dropId, ...clean } = editing;
+
   if(editingId){
-    const d = DATA.find(x=>x.id===editingId);
+    const d = orig;
     const oldRegion = d.region;
-    const renamed = d.name !== editing.name;
-    const { _sortNo, _sortMax, linkId, ...clean } = editing;
+    const nm = leadName;
     /* 换了院校就重新派生徽章，别沿用旧校的字母与配色 */
-    if(renamed){ clean.init = ''; clean.color = ''; }
+    if(d.name !== nm){ clean.init = ''; clean.color = ''; }
+    clean.name = nm;
     clean.init = autoInit(clean);
     clean.color = autoColor(clean);
     Object.assign(d, clean);
     if(oldRegion !== d.region){
-      /* 换榜单：移到新榜单末尾 */
+      /* 换榜单：先移到新榜单末尾，再落到新分类里的指定位置 */
       const others = DATA.filter(x=>x.id!==d.id);
       DATA = d.region === 'us' ? [d, ...others] : [...others, d];
+      reorderIn(d.id, _no, DATA.filter(x=>x.region===d.region && x.group===d.group));
     } else {
-      reorder(d.id, _sortNo);
+      reorderIn(d.id, _no, DATA.filter(x=>x.region===d.region && x.group===d.group));
     }
-    toast('已保存');
+    /* 编辑时多勾的院校：接在原有位置之后依次插入 */
+    extra.forEach((nm2, i) => {
+      const nd = { ...clean, id: ++seq, name: nm2 };
+      nd.init = autoInit(nd);
+      nd.color = autoColor(nd);
+      DATA.push(nd);
+      reorderIn(nd.id, _no + 1 + i, DATA.filter(x=>x.region===nd.region && x.group===nd.group));
+    });
+    const tip = extra.length ? '已保存，新增 ' + extra.length + ' 所院校' : '已保存';
+    toast(tip + skipTip);
   } else {
-    const { _sortNo, _sortMax, linkId, ...clean } = editing;
-    clean.init = autoInit(clean);
-    clean.color = autoColor(clean);
-    const nd = { id: ++seq, ...clean };
-    DATA.push(nd);
-    reorder(nd.id, _sortNo);
-    toast('已添加');
+    /* 批量添加：按勾选顺序依次插到排序号所在位置 */
+    fresh.forEach((nm2, i) => {
+      const nd = { ...clean, id: ++seq, name: nm2 };
+      nd.init = autoInit(nd);
+      nd.color = autoColor(nd);
+      DATA.push(nd);
+      reorderIn(nd.id, _no + i, DATA.filter(x=>x.region===nd.region && x.group===nd.group));
+    });
+    toast((fresh.length > 1 ? '已添加 ' + fresh.length + ' 所院校' : '已添加') + skipTip);
   }
   closeForm();
   renderAll();
