@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爬藤榜单管理 · 斯芬克后台</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --brand:#2b6cf6; --brand-h:#1a58e0; --brand-weak:#eaf1ff; --brand-line:#c9dbff;
+    --bg:#f4f6fa; --card:#fff; --line:#e8ebf0; --line-2:#f2f4f8;
+    --t1:#1d2129; --t2:#5a6270; --t3:#8a919f;
+    --side:#2b2b2b; --side-sub:#242424; --side-t:#c6c6c6;
+    --pink:#f43f6e; --purple:#7c4dff;
+  }
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg); color:var(--t1); font-size:14px; -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+  input,select{font-family:inherit;font-size:inherit;color:inherit;outline:none}
+
+  .app{display:grid;grid-template-columns:224px 1fr;height:100vh}
+
+  /* ============ 侧边栏 ============ */
+  .sidebar{background:var(--side);color:var(--side-t);display:flex;flex-direction:column;overflow:hidden}
+  .brand{display:flex;align-items:center;gap:10px;padding:0 18px;height:56px;flex:0 0 auto;border-bottom:1px solid rgba(255,255,255,.07)}
+  .brand .logo{width:26px;height:26px;border-radius:50%;background:#101010;border:1px solid #414141;display:grid;place-items:center;font-size:9px;color:#fff;font-weight:600;letter-spacing:.2px}
+  .brand .txt{color:#fff;font-size:14px;font-weight:600;letter-spacing:.3px}
+  .nav{flex:1;overflow-y:auto;padding:6px 0 28px}
+  .nav::-webkit-scrollbar{width:6px}
+  .nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px}
+  .nav::-webkit-scrollbar-track{background:transparent}
+  .nav-item{display:flex;align-items:center;height:46px;padding:0 14px 0 48px;font-size:14px;color:var(--side-t);
+    cursor:pointer;white-space:nowrap;transition:.15s;position:relative}
+  .nav-item:hover{background:rgba(255,255,255,.05);color:#fff}
+  .nav-item.active{color:#4d8bf5;background:rgba(255,255,255,.07);font-weight:500}
+  .nav-group{display:flex;align-items:center;gap:13px;height:46px;padding:0 14px 0 19px;font-size:14px;
+    color:#d2d2d2;cursor:pointer;transition:.15s}
+  .nav-group:hover{background:rgba(255,255,255,.05);color:#fff}
+  .nav-group .ic{width:16px;height:16px;flex:0 0 auto;opacity:.9}
+  .nav-group .arw{margin-left:auto;opacity:.55;transition:transform .2s}
+  .nav-group.open .arw{transform:rotate(180deg)}
+  .nav-sub{overflow:hidden;transition:max-height .25s ease}
+  .nav-sub.collapsed{max-height:0!important}
+
+  /* ============ 主区 ============ */
+  .main{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .topbar{height:56px;flex:0 0 auto;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:14px}
+  .ic-btn{width:30px;height:30px;border-radius:6px;display:grid;place-items:center;color:var(--t2)}
+  .ic-btn:hover{background:#f3f5f9}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .top-right .u{font-size:13px;color:var(--t2)}
+  .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#5b8cff,#2b6cf6);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:600;position:relative}
+  .avatar::after{content:"";position:absolute;right:-1px;top:-1px;width:8px;height:8px;border-radius:50%;background:#f5455c;border:1.5px solid #fff}
+
+  .content{flex:1;overflow-y:auto;padding:18px 20px 40px}
+  .content > *{max-width:1120px}
+  .crumb{font-size:12.5px;color:var(--t3);margin-bottom:14px}
+  .crumb b{color:var(--t2);font-weight:400}
+  .page-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:20px}
+  .page-head h1{font-size:19px;font-weight:600;letter-spacing:.2px}
+  .page-head p{font-size:12.5px;color:var(--t3);margin-top:6px}
+
+  .card{background:var(--card);border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 0 0 1px rgba(16,24,40,.04);overflow:hidden}
+  .toolbar{padding:14px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line-2)}
+  .field{position:relative;display:flex;align-items:center}
+  .field input[type=text]{height:32px;width:210px;border:1px solid #dcdfe6;border-radius:6px;padding:0 10px 0 30px;font-size:13px;background:#fff;transition:.15s}
+  .field input[type=text]:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,108,246,.1)}
+  .field .ico{position:absolute;left:9px;color:#b4bac4;pointer-events:none}
+  select.sel{height:32px;border:1px solid #dcdfe6;border-radius:6px;padding:0 28px 0 10px;font-size:13px;background:#fff;appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' fill='none' stroke='%238a919f' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 9px center}
+  select.sel:focus{border-color:var(--brand)}
+  .btn{height:32px;padding:0 14px;border-radius:6px;font-size:13px;display:inline-flex;align-items:center;gap:5px;transition:.15s;white-space:nowrap}
+  .btn.primary{background:var(--brand);color:#fff}
+  .btn.primary:hover{background:var(--brand-h)}
+  .btn.ghost{background:#fff;color:var(--t2);box-shadow:inset 0 0 0 1px #dcdfe6}
+  .btn.ghost:hover{color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand-line);background:#fafbff}
+  .btn.sm{height:28px;padding:0 11px;font-size:12.5px}
+  .spacer{flex:1}
+
+  .summary{display:flex;align-items:center;gap:16px;padding:14px 16px 6px;font-size:12.5px;color:var(--t3)}
+  .summary b{color:var(--t1);font-weight:600;font-size:13px}
+  .summary .dot{width:3px;height:3px;border-radius:50%;background:#d4d8e0}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+  thead th{background:#f8fafc;color:var(--t3);font-size:12.5px;font-weight:500;text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:11px 14px;border-bottom:1px solid var(--line-2);font-size:13px;vertical-align:middle}
+  tbody tr:hover{background:#fafbfe}
+  tbody tr:last-child td{border-bottom:none}
+
+  .sortno{display:inline-flex;align-items:center;height:28px;padding:0 2px;border-radius:5px;background:transparent;color:var(--t1,#2b3242);
+    font-size:13.5px;font-variant-numeric:tabular-nums;font-weight:500;transition:.15s;cursor:pointer}
+  .sortno:hover{color:var(--brand);text-decoration:underline;text-underline-offset:3px;text-decoration-style:dotted}
+  .sortbtn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px 0 9px;border-radius:6px;background:#f4f6fa;color:var(--t2);
+    font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:.4px;transition:.15s}
+  .sortbtn:hover{background:var(--brand-weak);color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand-line)}
+  .sortbtn svg{opacity:.55}
+
+  .sch{display:flex;align-items:center;min-width:0}
+  .sch .nm{min-width:0}
+  .sch .nm .cn{font-size:13.5px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  .tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:4px;font-size:11.5px;white-space:nowrap;font-weight:500}
+  .tag.us{background:#fff1f4;color:#d92b52}
+  .tag.ukhk{background:#eef3ff;color:#3a6fd8}
+  .tag.grp{background:#f4f5f8;color:#6b7280;font-weight:400;border:1px solid #eceef3}
+  .tag.none{background:transparent;color:#c3c8d1}
+
+
+  .offers{font-size:14px;font-weight:600;color:var(--t1);font-variant-numeric:tabular-nums}
+  .offers span{font-size:12px;color:var(--t3);font-weight:400}
+
+  .switch{width:36px;height:20px;border-radius:10px;background:#d5d9e0;position:relative;transition:.2s;flex:0 0 auto;display:inline-block}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  .switch.on{background:var(--brand)}
+  .switch.on::after{left:18px}
+  .st-text{font-size:11.5px;color:var(--t2);margin-left:6px;white-space:nowrap}
+  .st-wrap{display:flex;align-items:center}
+
+  .ops{display:flex;gap:12px}
+  .ops button{font-size:12.5px;color:var(--brand);padding:0}
+  .ops button:hover{text-decoration:underline}
+  .ops button.del{color:#e34d59}
+
+  .pager{display:flex;align-items:center;padding:13px 16px;gap:6px;font-size:12.5px;color:var(--t3)}
+  .pager .total{margin-right:auto}
+  .pg{min-width:28px;height:28px;padding:0 7px;border-radius:6px;font-size:12.5px;color:var(--t2);display:grid;place-items:center;transition:.15s}
+  .pg:hover{background:#f2f5fa}
+  .pg.on{background:var(--brand);color:#fff;font-weight:500}
+  .pg:disabled{opacity:.35;cursor:default}
+  .pg:disabled:hover{background:none}
+
+  .empty{padding:70px 0;text-align:center;color:var(--t3);font-size:13px}
+
+  /* ============ 弹窗 ============ */
+  .mask{position:fixed;inset:0;background:rgba(17,22,34,.45);z-index:900;opacity:0;pointer-events:none;transition:.2s}
+  .mask.show{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:950;left:50%;top:50%;transform:translate(-50%,-48%) scale(.98);width:840px;max-width:calc(100vw - 48px);height:min(93vh,824px);
+    background:#fff;border-radius:12px;box-shadow:0 24px 60px rgba(16,24,40,.28);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:.22s}
+  .modal.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .m-head{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .m-head h2{font-size:16px;font-weight:600}
+  .m-head .x{margin-left:auto;width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:#9aa0aa;font-size:18px;line-height:1}
+  .m-head .x:hover{background:#f4f6fa;color:var(--t1)}
+  .m-body{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+  .form{padding:16px 22px 14px;overflow-y:auto}
+  .form::-webkit-scrollbar{width:6px}
+  .form::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:3px}
+  .sect{margin-bottom:16px}
+  .sect:last-child{margin-bottom:0}
+  .sect-h{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--t2);margin-bottom:13px}
+  .sect-h::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--brand)}
+  .frow{margin-bottom:11px}
+  .frow:last-child{margin-bottom:0}
+  .flabel{font-size:12.5px;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+  .flabel .req{color:#e34d59}
+  .flabel .tip{font-size:11px;color:#a8adb7;margin-left:auto;font-weight:400}
+  .inp{height:34px;width:100%;border:1px solid #dcdfe6;border-radius:6px;padding:0 10px;font-size:13px;transition:.15s;background:#fff}
+  .inp:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(43,108,246,.1)}
+  .inp::placeholder{color:#b9bec7}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .three{display:grid;grid-template-columns:1fr 1fr 74px;gap:10px;align-items:end}
+
+  .opt-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .opt-card{border:1px solid #e2e5eb;border-radius:8px;padding:10px 12px;cursor:pointer;transition:.15s;background:#fff}
+  .opt-card:hover{border-color:#c3d4fb}
+  .opt-card.on{border-color:var(--brand);background:#f7faff;box-shadow:0 0 0 1px var(--brand) inset}
+  .opt-card .t{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+  .opt-card .t i{width:13px;height:13px;border-radius:50%;border:1.5px solid #cfd4dc;display:inline-block;flex:0 0 auto;transition:.15s}
+  .opt-card.on .t i{border:4px solid var(--brand)}
+  .opt-card .d{font-size:11px;color:#9aa0aa;margin-top:3px;padding-left:19px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{height:30px;padding:0 12px;border-radius:6px;font-size:12.5px;color:var(--t2);box-shadow:inset 0 0 0 1px #e2e5eb;background:#fff;transition:.15s}
+  .chip:hover{color:var(--brand);box-shadow:inset 0 0 0 1px #c3d4fb}
+  .chip.on{background:var(--brand-weak);color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand);font-weight:500}
+
+  .colors{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .sw{width:24px;height:24px;border-radius:50%;cursor:pointer;position:relative;transition:.15s}
+  .sw:hover{transform:scale(1.1)}
+  .sw.on::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid var(--brand)}
+  .sw-custom{width:24px;height:24px;border-radius:50%;border:1px dashed #cfd4dc;display:grid;place-items:center;font-size:13px;color:#a8adb7;cursor:pointer;position:relative;overflow:hidden}
+  .sw-custom input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;padding:0;border:none}
+
+  .switchrow{display:flex;align-items:center;gap:10px;padding:2px 0}
+  .switchrow .lbl{font-size:12.5px;color:var(--t2)}
+
+
+  .m-foot{padding:11px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;background:#fff;border-radius:0 0 12px 12px}
+  .btn.lg{height:34px;padding:0 20px;font-size:13.5px}
+
+
+  /* 排序滚轮 */
+  .picker{position:fixed;z-index:1000;width:132px;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(16,24,40,.18),0 0 0 1px rgba(16,24,40,.05);
+    opacity:0;pointer-events:none;transform:translateY(-4px);transition:.16s;overflow:hidden}
+  .picker.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+  .picker .ph{padding:9px 12px 6px;font-size:11.5px;color:var(--t3);text-align:center;border-bottom:1px solid var(--line-2)}
+  .wheel{position:relative;height:180px;overflow:hidden}
+  .wheel-list{height:180px;overflow-y:auto;scroll-snap-type:y mandatory;padding:72px 0;scrollbar-width:none;position:relative;z-index:2}
+  .wheel-list::-webkit-scrollbar{display:none}
+  .wheel-list .it{height:36px;display:grid;place-items:center;font-size:14px;color:#b0b5bd;scroll-snap-align:center;font-variant-numeric:tabular-nums;transition:color .15s;cursor:pointer;font-weight:500}
+  .wheel-list .it.cur{color:var(--brand);font-weight:700;font-size:15px}
+  .wheel-ind{position:absolute;left:8px;right:8px;top:72px;height:36px;border-top:1.5px solid var(--brand-line);border-bottom:1.5px solid var(--brand-line);
+    background:linear-gradient(90deg,rgba(43,108,246,.05),rgba(43,108,246,.02));border-radius:5px;pointer-events:none;z-index:1}
+  .wheel-fade{position:absolute;left:0;right:0;height:56px;pointer-events:none;z-index:3}
+  .wheel-fade.t{top:0;background:linear-gradient(#fff 12%,rgba(255,255,255,0))}
+  .wheel-fade.b{bottom:0;background:linear-gradient(rgba(255,255,255,0),#fff 88%)}
+  .picker .pf{padding:8px;border-top:1px solid var(--line-2)}
+  .picker .pf button{width:100%;height:30px;border-radius:6px;background:var(--brand);color:#fff;font-size:12.5px;font-weight:500}
+
+  .toast{position:fixed;left:50%;top:74px;transform:translate(-50%,-12px);background:#1f2733;color:#fff;font-size:13px;padding:9px 18px;border-radius:8px;
+    box-shadow:0 8px 24px rgba(16,24,40,.2);z-index:1200;opacity:0;pointer-events:none;transition:.22s;max-width:70vw}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .dialog{position:fixed;z-index:960;left:50%;top:50%;transform:translate(-50%,-50%) scale(.97);width:380px;background:#fff;border-radius:12px;padding:22px;
+    box-shadow:0 24px 60px rgba(16,24,40,.28);opacity:0;pointer-events:none;transition:.2s}
+  .dialog.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+  .dialog h3{font-size:15px;font-weight:600;margin-bottom:8px}
+  .dialog p{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:20px}
+  .dialog .btns{display:flex;justify-content:flex-end;gap:10px}
+
+
+  /* ============ 整页表单 ============ */
+  .form-card{background:#fff;border-radius:10px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 0 0 1px rgba(16,24,40,.04);padding:0 0 6px;max-width:860px}
+  .fc-head{padding:22px 30px 4px;font-size:15.5px;font-weight:600;letter-spacing:.2px}
+  .fp-body{padding:18px 30px 0}
+  .fp-row{display:grid;grid-template-columns:148px minmax(0,1fr);gap:14px;margin-bottom:18px;align-items:start}
+  .fp-label{text-align:right;font-size:13px;color:#5a6270;line-height:34px}
+  .fp-label .req{color:#e34d59;margin-right:2px}
+  .fp-ctrl{min-width:0;max-width:372px}
+  .fp-tip{font-size:11.5px;color:#a3a9b4;margin-top:6px;line-height:1.55}
+  .fp-inline{display:flex;align-items:center;gap:10px}
+  .fp-foot{padding:10px 30px 26px;display:flex;gap:12px;margin-left:162px}
+  .ck{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#5a6270;cursor:pointer;line-height:34px;white-space:nowrap}
+  .ck input{width:14px;height:14px;accent-color:var(--brand);cursor:pointer;margin:0}
+  .crumb .lnk{color:var(--t3)}
+  .crumb .lnk.link{cursor:pointer;transition:.15s}
+  .crumb .lnk.link:hover{color:var(--brand)}
+  .btn.lg{height:34px;padding:0 22px;font-size:13.5px}
+
+  /* ---- 院校选择器（可搜索下拉） ---- */
+  .cbx{position:relative}
+  .cbx .inp{padding-right:32px}
+  .cbx-arw{position:absolute;right:11px;top:17px;color:#b8bec9;pointer-events:none;transition:.15s}
+  .cbx.open .cbx-arw{transform:rotate(180deg);color:var(--brand)}
+  .cbx-pop{position:absolute;left:0;top:calc(100% + 5px);z-index:60;display:none;width:300px;max-width:calc(100vw - 60px);
+    background:#fff;border:1px solid #e4e7ee;border-radius:8px;padding:4px;max-height:250px;overflow-y:auto;
+    box-shadow:0 10px 28px rgba(16,24,40,.14)}
+  .cbx.open .cbx-pop{display:block}
+  .cbx-pop::-webkit-scrollbar{width:6px}
+  .cbx-pop::-webkit-scrollbar-thumb{background:#dcdfe6;border-radius:3px}
+  .cbx-item{display:flex;align-items:center;padding:9px 10px;border-radius:6px;cursor:pointer;min-width:0}
+  .cbx-item:hover,.cbx-item.act{background:#f3f7ff}
+  .cbx-item .n{font-size:13px;color:var(--t1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}
+  .cbx-item mark{background:#fff2c2;color:inherit;padding:0;border-radius:2px}
+  .cbx-empty{padding:16px 10px;text-align:center;font-size:12px;color:#aab0bb}
+  .inp[readonly]{background:#f7f8fa;color:#6b7280;cursor:default}
+
+  @media (max-width:1320px){
+    .app{grid-template-columns:224px 1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">slk</div>
+      <div class="txt">斯芬克后台管理</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item">广告管理</div>
+      <div class="nav-item">国家地区管理</div>
+      <div class="nav-item">学位管理</div>
+      <div class="nav-item">专业管理</div>
+      <div class="nav-item">在读年级</div>
+      <div class="nav-item">在校排名</div>
+      <div class="nav-item">科系管理</div>
+      <div class="nav-item">课程类别</div>
+      <div class="nav-item">设置电话</div>
+      <div class="nav-item">找到组织二维码</div>
+      <div class="nav-item">审核开关</div>
+      <div class="nav-item">账号重置</div>
+
+      <div class="nav-group open">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><rect x="2.5" y="2.5" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5.6 8.2l1.8 1.8 3.2-3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>offer管理</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="nav-sub" style="max-height:160px">
+        <div class="nav-item">offer列表</div>
+        <div class="nav-item active">爬藤榜单管理</div>
+      </div>
+      <div class="nav-group">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.2" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="6.5" r="1.7" stroke="currentColor" stroke-width="1.3"/><path d="M4.9 12.3c.6-1.5 1.7-2.2 3.1-2.2s2.5.7 3.1 2.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>用户管理</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="nav-group">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M4 2.5h5.6L12 5v8.5H4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6.2 7.2h3.6M6.2 9.8h3.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>课程管理</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="nav-group">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M2.5 13.2h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M4.4 13V9.2M7.3 13V5.6M10.2 13V7.8M13 13V3.6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>数据统计</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="nav-group">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M2.8 8.4l3.1 3.1L13.2 4.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>打卡</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+      <div class="nav-group">
+        <svg class="ic" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M8 1.7v1.7M8 12.6v1.7M1.7 8h1.7M12.6 8h1.7M3.6 3.6l1.2 1.2M11.2 11.2l1.2 1.2M12.4 3.6l-1.2 1.2M4.8 11.2l-1.2 1.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        <span>公共设置</span>
+        <svg class="arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+
+    </nav>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="topbar">
+      <button class="ic-btn" title="收起菜单">
+        <svg width="17" height="17" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <div class="top-right">
+        <span class="u">slk-sfku</span>
+        <div class="avatar">S</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="crumb" id="crumb"><span class="lnk">院校</span> / <span class="lnk">爬藤榜单管理</span></div>
+
+      <div id="listView">
+      <div class="page-head">
+        <div>
+          <h1>爬藤榜单管理</h1>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <div class="field">
+            <svg class="ico" width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <input type="text" id="kw" placeholder="输入院校名称">
+          </div>
+          <select class="sel" id="fRegion">
+            <option value="all">全部榜单</option>
+            <option value="us">美本</option>
+            <option value="ukhk">英国·港新</option>
+          </select>
+          <select class="sel" id="fGroup">
+            <option value="all">全部分组</option>
+          </select>
+          <button class="btn primary" id="btnSearch">查询</button>
+          <button class="btn ghost" id="btnReset">重置</button>
+          <div class="spacer"></div>
+          <button class="btn primary" id="btnAdd">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 2v8M2 6h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            添加院校
+          </button>
+        </div>
+
+        <div class="summary" id="summary"></div>
+
+        <table>
+          <colgroup>
+            <col style="width:64px">
+            <col>
+            <col style="width:88px">
+            <col style="width:118px">
+            <col style="width:82px">
+            <col style="width:96px">
+            <col style="width:112px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>排序</th>
+              <th>院校</th>
+              <th>榜单</th>
+              <th>分组</th>
+              <th>offer 数</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+
+        <div class="pager" id="pager"></div>
+      </div>
+      </div><!-- /listView -->
+
+      <!-- ================= 整页表单 ================= -->
+      <div id="formView" style="display:none">
+        <div class="form-card">
+          <div class="fc-head" id="mTitle">编辑院校</div>
+          <div class="fp-body">
+
+            <div class="fp-row">
+              <div class="fp-label"><span class="req">*</span>榜单归属：</div>
+              <div class="fp-ctrl">
+                <select class="sel" id="fRegionSel" style="width:100%;height:34px">
+                  <option value="us">美本</option>
+                  <option value="ukhk">英国 · 港新</option>
+                </select>
+                <div class="fp-tip">一所院校只能归属一个榜单，决定它出现在小程序的哪个 tab</div>
+              </div>
+            </div>
+
+            <div class="fp-row">
+              <div class="fp-label"><span class="req">*</span>分组标签：</div>
+              <div class="fp-ctrl">
+                <select class="sel" id="fGroupSel" style="width:100%;height:34px"></select>
+                <div class="fp-tip">对应小程序端榜单上方的筛选 chip</div>
+              </div>
+            </div>
+
+            <div class="fp-row">
+              <div class="fp-label"><span class="req">*</span>院校名称：</div>
+              <div class="fp-ctrl">
+                <div class="cbx" id="nameCbx">
+                  <input class="inp" id="fName" placeholder="点击选择，或输入关键词搜索院校" autocomplete="off">
+                  <svg class="cbx-arw" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.6 4.4L6 7.8l3.4-3.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <div class="cbx-pop" id="namePop"></div>
+                </div>
+                <div class="fp-tip">关联后台院校库，只能从库中选择；可选院校跟随上方榜单归属与分组标签，支持输入关键词快速定位</div>
+              </div>
+            </div>
+
+            <div class="fp-row">
+              <div class="fp-label"><span class="req">*</span>排序号：</div>
+              <div class="fp-ctrl">
+                <div class="fp-inline">
+                  <input class="inp" id="fSortInput" inputmode="numeric" style="width:76px;text-align:center" placeholder="1">
+                  <span style="font-size:13px;color:#8a919f;margin:0 -4px 0 -5px">位</span>
+                  <button class="sortbtn" id="fSortBtn" style="height:34px;padding:0 10px">
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 1.8l3 2.7M3 7.5L6 10.2l3-2.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    滚动选择
+                  </button>
+                </div>
+                <div class="fp-tip">可直接输入数字，也可点「滚动选择」；决定前端 01 / 02 / 03 的顺序，调整后其余院校自动顺延</div>
+              </div>
+            </div>
+
+            <div class="fp-row">
+              <div class="fp-label">上架状态：</div>
+              <div class="fp-ctrl">
+                <div class="fp-inline" style="gap:18px">
+                  <label class="ck"><input type="radio" name="st" value="1" id="stOn">已上架</label>
+                  <label class="ck"><input type="radio" name="st" value="0" id="stOff">已下架</label>
+                </div>
+                <div class="fp-tip">下架后小程序端不再展示该院校</div>
+              </div>
+            </div>
+
+          </div>
+          <div class="fp-foot">
+            <button class="btn primary lg" id="mSave">保存</button>
+            <button class="btn ghost lg" id="mCancel">取消</button>
+          </div>
+        </div>
+      </div>
+      <!-- /formView -->
+    </div>
+  </div>
+
+</div>
+
+<div class="mask" id="mask"></div>
+
+<!-- 排序滚轮 -->
+<div class="picker" id="picker">
+  <div class="ph">选择位置</div>
+  <div class="wheel">
+    <div class="wheel-fade t"></div>
+    <div class="wheel-ind"></div>
+    <div class="wheel-list" id="wheelList"></div>
+    <div class="wheel-fade b"></div>
+  </div>
+  <div class="pf"><button id="pickerOk">确定</button></div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="dialog" id="dialog">
+  <h3 id="dlgTitle"></h3>
+  <p id="dlgDesc"></p>
+  <div class="btns">
+    <button class="btn ghost" id="dlgNo">取消</button>
+    <button class="btn primary" id="dlgYes">确定</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   数据：直接取自小程序原型 sfk-offer-ivy 的真实榜单数据
+   字段：id 名称 首字母 徽章色 榜单 分组 offer数 状态
+   （en 英文名、排名体系 sys / 名次 rank 仍在原始数据里，但后台已不做配置与展示）
+   ========================================================= */
+const REGION_LABEL = { us:'美本', ukhk:'英国·港新' };
+const GROUP_MAP = { us:['哈耶普斯麻','TOP30综合类','TOP30艺术类'], ukhk:['G5','港八大','新加坡'] };
+const PALETTE = ['#A51C30','#012169','#002D72','#8C1515','#4E2A84','#00356B','#0C2340','#E77500'];
+
+let DATA = [];
+let seq = 0;
+function add(name,en,init,color,region,group,sys,rank,tie,offers){
+  DATA.push({ id:++seq, name, en, init, color, region, group, sys, rank, tie:!!tie, offers, status:1 });
+}
+
+/* ---- 美本 45 所 ---- */
+add('普林斯顿大学','Princeton University','P','#E77500','us','哈耶普斯麻','us-news','1',0,'1');
+add('麻省理工学院','Massachusetts Institute of Technology','M','#8A8B8C','us','哈耶普斯麻','us-news','2',0,'1');
+add('哈佛大学','Harvard University','H','#A51C30','us','哈耶普斯麻','us-news','3',0,'1');
+add('斯坦福大学','Stanford University','S','#8C1515','us','哈耶普斯麻','us-news','4',1,'2');
+add('耶鲁大学','Yale University','Y','#00356B','us','哈耶普斯麻','us-news','4',1,'2');
+add('芝加哥大学','University of Chicago','C','#800000','us','TOP30综合类','us-news','6',0,'5');
+add('杜克大学','Duke University','D','#012169','us','TOP30综合类','us-news','7',1,'4');
+add('约翰霍普金斯大学','Johns Hopkins University','J','#002D72','us','TOP30综合类','us-news','7',1,'13');
+add('西北大学','Northwestern University','N','#4E2A84','us','TOP30综合类','us-news','7',1,'2');
+add('宾夕法尼亚大学','University of Pennsylvania','P','#011F5B','us','TOP30综合类','us-news','7',1,'4');
+add('加州理工学院','California Institute of Technology','C','#FF6C0C','us','TOP30综合类','us-news','11',0,'1');
+add('康奈尔大学','Cornell University','C','#B31B1B','us','TOP30综合类','us-news','12',0,'7');
+add('布朗大学','Brown University','B','#4E3629','us','TOP30综合类','us-news','13',1,'3');
+add('达特茅斯学院','Dartmouth College','D','#00693E','us','TOP30综合类','us-news','13',1,'1');
+add('哥伦比亚大学','Columbia University','C','#1D4F91','us','TOP30综合类','us-news','15',1,'5');
+add('加州大学伯克利分校','UC Berkeley','B','#003262','us','TOP30综合类','us-news','15',1,'11');
+add('莱斯大学','Rice University','R','#00256A','us','TOP30综合类','us-news','17',1,'3');
+add('加州大学洛杉矶分校','UCLA','U','#2D68C4','us','TOP30综合类','us-news','17',1,'17');
+add('范德堡大学','Vanderbilt University','V','#866D4B','us','TOP30综合类','us-news','17',1,'4');
+add('卡内基梅隆大学','Carnegie Mellon University','C','#C41230','us','TOP30综合类','us-news','20',1,'9');
+add('密歇根安娜堡分校','University of Michigan','M','#00274C','us','TOP30综合类','us-news','20',1,'6');
+add('圣母大学','University of Notre Dame','N','#0C2340','us','TOP30综合类','us-news','20',1,'2');
+add('圣路易斯华盛顿大学','Washington University in St. Louis','W','#A51417','us','TOP30综合类','us-news','20',1,'5');
+add('埃默里大学','Emory University','E','#012D6B','us','TOP30综合类','us-news','24',1,'6');
+add('乔治城大学','Georgetown University','G','#041E42','us','TOP30综合类','us-news','24',1,'4');
+add('北卡罗来纳大学教堂山分校','UNC Chapel Hill','U','#4B9CD3','us','TOP30综合类','us-news','26',1,'3');
+add('弗吉尼亚大学','University of Virginia','V','#232D4B','us','TOP30综合类','us-news','26',1,'5');
+add('南加州大学','University of Southern California','S','#990000','us','TOP30综合类','us-news','28',0,'44');
+add('加州大学圣地亚哥分校','UC San Diego','U','#00629B','us','TOP30综合类','us-news','29',0,'9');
+add('佛罗里达大学','University of Florida','F','#0021A5','us','TOP30综合类','us-news','30',1,'7');
+add('德克萨斯大学奥斯汀分校','UT Austin','T','#BF5700','us','TOP30综合类','us-news','30',1,'8');
+add('罗德岛设计学院','Rhode Island School of Design','R','#3B5BA5','us','TOP30艺术类','us-news-art','2',1,'5');
+add('弗吉尼亚联邦大学','Virginia Commonwealth University','V','#F8B300','us','TOP30艺术类','us-news-art','2',1,'3');
+add('芝加哥艺术学院','School of the Art Institute of Chicago','A','#B08D3E','us','TOP30艺术类','us-news-art','6',0,'6');
+add('加州艺术学院','California College of the Arts','C','#D2232A','us','TOP30艺术类','us-news-art','7',0,'4');
+add('罗格斯大学新布朗斯维克分校','Rutgers University–New Brunswick','R','#CC0033','us','TOP30艺术类','us-news-art','8',1,'2');
+add('阿尔弗雷德大学纽约州立陶瓷学院','Alfred University','A','#6C2E9C','us','TOP30艺术类','us-news-art','11',1,'1');
+add('克兰布鲁克艺术学院','Cranbrook Academy of Art','C','#2E5A88','us','TOP30艺术类','us-news-art','11',1,'1');
+add('纽约市立大学亨特学院','Hunter College','H','#333F48','us','TOP30艺术类','us-news-art','14',1,'2');
+add('纽约大学','New York University','N','#57068C','us','TOP30艺术类','us-news-art','14',1,'8');
+add('纽约视觉艺术学院','School of Visual Arts','S','#C8102E','us','TOP30艺术类','us-news-art','14',1,'7');
+add('天普大学','Temple University','T','#9E1B34','us','TOP30艺术类','us-news-art','14',1,'3');
+add('威斯康星大学麦迪逊分校','University of Wisconsin–Madison','W','#C5050C','us','TOP30艺术类','us-news-art','14',1,'4');
+add('帕森斯设计学院','Parsons School of Design','P','#222222','us','TOP30艺术类','qs-art','2',0,'9');
+add('普瑞特艺术学院','Pratt Institute','P','#5F8F4E','us','TOP30艺术类','qs-art','8',0,'4');
+
+/* ---- 英国 · 港新 15 所 ---- */
+add('帝国理工学院','Imperial College London','I','#003E74','ukhk','G5','qs','2',0,'22');
+add('牛津大学','University of Oxford','O','#002147','ukhk','G5','qs','4',0,'5');
+add('剑桥大学','University of Cambridge','C','#A3C1AD','ukhk','G5','qs','6',0,'7');
+add('伦敦大学学院','University College London','U','#002248','ukhk','G5','qs','8',0,'38');
+add('新加坡国立大学','National University of Singapore','N','#003D7C','ukhk','新加坡','qs','10',0,'15');
+add('香港大学','The University of Hong Kong','H','#006F51','ukhk','港八大','qs','11',0,'32');
+add('南洋理工大学','Nanyang Technological University','T','#B4273B','ukhk','新加坡','qs','12',0,'9');
+add('香港中文大学','The Chinese University of Hong Kong','C','#7A2E8E','ukhk','港八大','qs','18',0,'24');
+add('香港科技大学','HKUST','S','#003D7C','ukhk','港八大','qs','33',0,'18');
+add('香港理工大学','The Hong Kong Polytechnic University','P','#A02337','ukhk','港八大','qs','50',0,'15');
+add('香港城市大学','City University of Hong Kong','C','#00876C','ukhk','港八大','qs','52',0,'12');
+add('伦敦政经学院','London School of Economics','L','#E30613','ukhk','G5','qs','62',0,'24');
+add('香港浸会大学','Hong Kong Baptist University','B','#27408B','ukhk','港八大','qs','216',0,'6');
+add('香港教育大学','The Education University of Hong Kong','E','#6E267B','ukhk','港八大','qs','406',0,'4');
+add('香港岭南大学','Lingnan University','L','#2E6BE8','ukhk','港八大','qs','581',0,'3');
+
+/* =========================================================
+   院校库（主数据）
+   后台维护的院校总表，榜单只引用其中一部分。
+   LIB_EXTRA 是「库中已有、但尚未加入榜单」的院校，用于演示选择器。
+   ========================================================= */
+const LIB_EXTRA = [
+  ['塔夫茨大学','Tufts University','us'],
+  ['南加州大学','University of Southern California','us'],
+  ['佐治亚理工学院','Georgia Institute of Technology','us'],
+  ['德州大学奥斯汀分校','University of Texas at Austin','us'],
+  ['伊利诺伊大学厄巴纳-香槟分校','University of Illinois Urbana-Champaign','us'],
+  ['波士顿大学','Boston University','us'],
+  ['东北大学','Northeastern University','us'],
+  ['罗切斯特大学','University of Rochester','us'],
+  ['加州大学圣地亚哥分校','University of California, San Diego','us'],
+  ['加州大学戴维斯分校','University of California, Davis','us'],
+  ['加州大学尔湾分校','University of California, Irvine','us'],
+  ['芝加哥艺术学院','School of the Art Institute of Chicago','us'],
+  ['加州艺术学院','California College of the Arts','us'],
+  ['艺术中心设计学院','ArtCenter College of Design','us'],
+  ['爱丁堡大学','The University of Edinburgh','ukhk'],
+  ['曼彻斯特大学','The University of Manchester','ukhk'],
+  ['伦敦国王学院','Kings College London','ukhk'],
+  ['华威大学','The University of Warwick','ukhk'],
+  ['布里斯托大学','University of Bristol','ukhk'],
+  ['格拉斯哥大学','University of Glasgow','ukhk'],
+  ['新加坡管理大学','Singapore Management University','ukhk']
+];
+
+const SCHOOL_LIB = (() => {
+  const seen = new Map();
+  DATA.forEach(d => seen.set(d.name, { name:d.name, region:d.region }));
+  LIB_EXTRA.forEach(([name, , region]) => { if(!seen.has(name)) seen.set(name, { name, region }); });
+  return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+})();
+
+
+/* =========================================================
+   工具
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const pad2 = n => (n < 10 ? '0' + n : '' + n);
+
+function tint(hex, a){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+/* 徽章首字母 / 底色：后台不再手工配置，由校名自动派生 */
+function autoInit(d){
+  if(d.init) return d.init;
+  const nm = (d.name || '').trim();
+  return nm ? nm.charAt(0) : '?';
+}
+function autoColor(d){
+  if(d.color) return d.color;
+  const str = d.name || '';
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (h * 31 + str.charCodeAt(i)) >>> 0; }
+  return PALETTE[h % PALETTE.length];
+}
+
+function regionPool(region){ return DATA.filter(d => d.region === region); }
+function sortNoOf(d){ return regionPool(d.region).indexOf(d) + 1; }
+
+/* =========================================================
+   状态
+   ========================================================= */
+let state = { region:'all', group:'all', kw:'', page:1, size:10 };
+let editing = null;      // 表单临时对象
+let editingId = null;    // null = 新增
+
+/* =========================================================
+   筛选与渲染
+   ========================================================= */
+function filtered(){
+  return DATA.filter(d =>
+    (state.region === 'all' || d.region === state.region) &&
+    (state.group === 'all' || d.group === state.group) &&
+    (!state.kw || d.name.includes(state.kw))
+  );
+}
+
+function renderTable(){
+  const list = filtered();
+  const totalPage = Math.max(1, Math.ceil(list.length / state.size));
+  if(state.page > totalPage) state.page = totalPage;
+  const pageRows = list.slice((state.page-1)*state.size, state.page*state.size);
+
+  /* 统计 */
+  const usN = DATA.filter(d=>d.region==='us').length;
+  const ukN = DATA.filter(d=>d.region==='ukhk').length;
+  const onN = list.filter(d=>d.status).length;
+  $('#summary').innerHTML =
+    `<span>筛选结果 <b>${list.length}</b> 所</span><span class="dot"></span>` +
+    `<span>美本 <b>${usN}</b></span><span class="dot"></span>` +
+    `<span>英国·港新 <b>${ukN}</b></span><span class="dot"></span>` +
+    `<span>已上架 <b>${onN}</b></span>`;
+
+  /* 表体 */
+  if(!pageRows.length){
+    $('#tbody').innerHTML = `<tr><td colspan="8"><div class="empty">没有匹配的院校，换个条件试试</div></td></tr>`;
+  } else {
+    $('#tbody').innerHTML = pageRows.map(d => {
+      const no = sortNoOf(d);
+      return `<tr data-id="${d.id}">
+        <td>
+          <button class="sortno" data-sort="${d.id}" title="点击调整顺序">${no}</button>
+        </td>
+        <td>
+          <div class="sch">
+            <div class="nm">
+              <div class="cn">${d.name}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="tag ${d.region}">${REGION_LABEL[d.region]}</span></td>
+        <td>${d.group ? `<span class="tag grp">${d.group}</span>` : `<span class="tag none">未分组</span>`}</td>
+        <td><span class="offers">${d.offers ? d.offers + '<span>+</span>' : '—'}</span></td>
+        <td>
+          <div class="st-wrap">
+            <span class="switch ${d.status?'on':''}" data-st="${d.id}"></span>
+            <span class="st-text">${d.status?'上架':'下架'}</span>
+          </div>
+        </td>
+        <td>
+          <div class="ops">
+            <button data-edit="${d.id}">编辑</button>
+            <button class="del" data-del="${d.id}">删除</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* 分页 */
+  let pg = `<span class="total">共 ${list.length} 条 · 每页 ${state.size} 条</span>`;
+  pg += `<button class="pg" data-pg="prev" ${state.page===1?'disabled':''}>上一页</button>`;
+  for(let i=1;i<=totalPage;i++){
+    if(totalPage > 7 && i > 2 && i < totalPage-1 && Math.abs(i-state.page) > 1){
+      if(i === 3) pg += `<span class="pg" style="pointer-events:none">…</span>`;
+      continue;
+    }
+    pg += `<button class="pg ${i===state.page?'on':''}" data-pg="${i}">${i}</button>`;
+  }
+  pg += `<button class="pg" data-pg="next" ${state.page===totalPage?'disabled':''}>下一页</button>`;
+  $('#pager').innerHTML = pg;
+}
+
+function renderAll(){ renderTable(); }
+
+/* =========================================================
+   排序滚轮
+   ========================================================= */
+let pickerState = { max:0, val:1, onOk:null };
+
+function openPicker(anchor, max, val, onOk, offsetEnd){
+  pickerState = { max, val, onOk };
+  const list = $('#wheelList');
+  list.innerHTML = Array.from({length:max}, (_,i)=>
+    `<div class="it ${i+1===val?'cur':''}" data-i="${i+1}">${i+1}</div>`
+  ).join('');
+
+  const p = $('#picker');
+  p.classList.add('show');
+  const r = anchor.getBoundingClientRect();
+  let left = r.left + r.width/2 - 66;
+  if(left + 132 > window.innerWidth - 10) left = window.innerWidth - 142;
+  if(left < 10) left = 10;
+  let top = r.bottom + 8;
+  if(top + 290 > window.innerHeight) top = r.top - 298;
+  p.style.left = left + 'px';
+  p.style.top = Math.max(10, top) + 'px';
+
+  requestAnimationFrame(()=>{
+    list.scrollTop = (val - 1) * 36;
+    highlightWheel();
+  });
+}
+
+function highlightWheel(){
+  const list = $('#wheelList');
+  const idx = Math.round(list.scrollTop / 36);
+  const v = Math.min(pickerState.max, Math.max(1, idx + 1));
+  pickerState.val = v;
+  list.querySelectorAll('.it').forEach(el=>{
+    el.classList.toggle('cur', +el.dataset.i === v);
+  });
+}
+
+function closePicker(){ $('#picker').classList.remove('show'); }
+
+/* 点击滚轮外部关闭 */
+document.addEventListener('mousedown', e=>{
+  const p = $('#picker');
+  if(p.classList.contains('show') && !p.contains(e.target) && !e.target.closest('[data-sort]') && !e.target.closest('#fSortBtn')){
+    closePicker();
+  }
+});
+
+/* =========================================================
+   重排
+   ========================================================= */
+function reorder(id, newNo){
+  const d = DATA.find(x => x.id === id);
+  const region = d.region;
+  const others = DATA.filter(x => x.region !== region);
+  const pool = DATA.filter(x => x.region === region);
+  pool.splice(pool.indexOf(d), 1);
+  pool.splice(Math.min(newNo-1, pool.length), 0, d);
+  DATA = region === 'us' ? [...pool, ...others] : [...others, ...pool];
+}
+
+/* =========================================================
+   整页表单
+   ========================================================= */
+function openForm(id){
+  editingId = id;
+  const d = id ? DATA.find(x => x.id === id) : null;
+  editing = d
+    ? { ...d }
+    : { name:'', en:'', linkId:null, init:'', color:PALETTE[0], region: state.region==='all' ? 'us' : state.region,
+        group:'', sys:'us-news', rank:'', tie:false, offers:'', status:1 };
+
+  /* 反查院校库，确认这条记录关联的是库里哪一所 */
+  const libHit = SCHOOL_LIB.find(s => s.name === editing.name);
+  editing.linkId = libHit ? libHit.name : null;
+  closeNamePop();
+
+  $('#mTitle').textContent = id ? '编辑院校' : '添加院校';
+  $('#fName').value = editing.name;
+  $('#stOn').checked = !!editing.status;
+  $('#stOff').checked = !editing.status;
+  $('#fRegionSel').value = editing.region;
+
+  renderGroupSel();
+  updateSortBtn();
+
+  /* 切换到表单页 */
+  $('#crumb').innerHTML = '<span class="lnk link" data-back>院校</span> / ' +
+    '<span class="lnk link" data-back>爬藤榜单管理</span> / <span>' + (id ? '编辑院校' : '添加院校') + '</span>';
+  $('#listView').style.display = 'none';
+  $('#formView').style.display = 'block';
+  $('.content').scrollTop = 0;
+}
+
+function closeForm(){
+  editingId = null;
+  $('#formView').style.display = 'none';
+  $('#listView').style.display = 'block';
+  $('#crumb').innerHTML = '<span class="lnk">院校</span> / <span class="lnk">爬藤榜单管理</span>';
+  $('.content').scrollTop = 0;
+}
+
+function renderGroupSel(){
+  const opts = GROUP_MAP[editing.region] || [];
+  if(!editing.group) editing.group = opts[0] || '';
+  $('#fGroupSel').innerHTML = opts.map(g =>
+    `<option value="${g}" ${editing.group===g?'selected':''}>${g}</option>`
+  ).join('');
+}
+
+function updateSortBtn(){
+  const pool = editingId
+    ? regionPool(editing.region).length
+    : regionPool(editing.region).length + 1;
+  let no = editingId ? regionPool(editing.region).findIndex(x=>x.id===editingId) + 1 : pool;
+  if(editingId && editing.region !== DATA.find(x=>x.id===editingId).region) no = pool;
+  $('#fSortInput').value = no;
+  editing._sortNo = no;
+  editing._sortMax = pool;
+}
+
+/* =========================================================
+   事件绑定
+   ========================================================= */
+/* 侧边栏分组折叠 */
+document.querySelectorAll('.sidebar .nav-group').forEach(g=>{
+  g.addEventListener('click', ()=>{
+    const sub = g.nextElementSibling;
+    const isOpen = g.classList.toggle('open');
+    if(sub && sub.classList.contains('nav-sub')){
+      sub.classList.toggle('collapsed', !isOpen);
+    }
+  });
+});
+
+/* 筛选 */
+$('#fRegion').addEventListener('change', e=>{
+  state.region = e.target.value; state.page = 1;
+  renderGroupFilter();
+  renderAll();
+});
+$('#fGroup').addEventListener('change', e=>{ state.group = e.target.value; state.page = 1; renderTable(); });
+$('#kw').addEventListener('input', e=>{ state.kw = e.target.value.trim(); state.page = 1; renderTable(); });
+$('#btnSearch').addEventListener('click', ()=>{ state.page = 1; renderTable(); });
+$('#btnReset').addEventListener('click', ()=>{
+  state = { region:'all', group:'all', kw:'', page:1, size:state.size };
+  $('#kw').value = ''; $('#fRegion').value = 'all';
+  renderGroupFilter(); renderTable();
+});
+
+function renderGroupFilter(){
+  const groups = state.region === 'all'
+    ? [...new Set([...GROUP_MAP.us, ...GROUP_MAP.ukhk])]
+    : GROUP_MAP[state.region];
+  $('#fGroup').innerHTML = `<option value="all">全部分组</option>` +
+    groups.map(g => `<option value="${g}">${g}</option>`).join('');
+  state.group = 'all';
+}
+
+/* 表格委托 */
+$('#tbody').addEventListener('click', e=>{
+  const sortBtn = e.target.closest('[data-sort]');
+  if(sortBtn){ trySort(+sortBtn.dataset.sort, sortBtn); return; }
+
+  const st = e.target.closest('[data-st]');
+  if(st){ const d = DATA.find(x=>x.id===+st.dataset.st); d.status = d.status?0:1; renderAll(); toast(d.status?'已上架':'已下架'); return; }
+
+  const ed = e.target.closest('[data-edit]');
+  if(ed){ openForm(+ed.dataset.edit); return; }
+
+  const dl = e.target.closest('[data-del]');
+  if(dl){
+    const d = DATA.find(x=>x.id===+dl.dataset.del);
+    confirmDlg('删除院校', `确定从榜单中删除「${d.name}」？删除后小程序端将不再展示该院校。`, ()=>{
+      DATA = DATA.filter(x=>x.id!==d.id);
+      renderAll(); toast('已删除');
+    });
+  }
+});
+
+function trySort(id, anchor){
+  const d = DATA.find(x=>x.id===id);
+  if(state.region === 'all'){
+    toast('先在上方筛选里选择「美本」或「英国·港新」，再调整顺序');
+    return;
+  }
+  if(state.group !== 'all' || state.kw){
+    toast('分组筛选状态下无法调序，请选择「全部分组」并清空搜索');
+    return;
+  }
+  const max = regionPool(d.region).length;
+  openPicker(anchor, max, sortNoOf(d), newNo=>{
+    reorder(id, newNo);
+    renderAll();
+    toast(`「${d.name}」已移动到第 ${newNo} 位`);
+  });
+}
+
+/* 分页 */
+$('#pager').addEventListener('click', e=>{
+  const b = e.target.closest('[data-pg]'); if(!b || b.disabled) return;
+  const v = b.dataset.pg;
+  const total = Math.max(1, Math.ceil(filtered().length / state.size));
+  if(v === 'prev') state.page = Math.max(1, state.page-1);
+  else if(v === 'next') state.page = Math.min(total, state.page+1);
+  else state.page = +v;
+  renderTable();
+});
+
+/* 新增 / 取消 / 面包屑返回 */
+$('#btnAdd').addEventListener('click', ()=>openForm(null));
+$('#mCancel').addEventListener('click', closeForm);
+$('#crumb').addEventListener('click', e=>{
+  if(e.target.closest('[data-back]')) closeForm();
+});
+
+
+/* 表单交互 */
+/* ---- 院校选择器 ---- */
+const nameState = { open:false, active:-1, list:[], browsing:false };
+
+function escHtml(t){
+  return String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function markKw(text, q){
+  const raw = String(text || '');
+  if(!q) return escHtml(raw);
+  const i = raw.toLowerCase().indexOf(q);
+  if(i < 0) return escHtml(raw);
+  return escHtml(raw.slice(0, i)) + '<mark>' + escHtml(raw.slice(i, i + q.length)) + '</mark>' + escHtml(raw.slice(i + q.length));
+}
+
+function buildNameList(kw){
+  /* 院校名称跟着「榜单归属 + 分组标签」走：只列该分组名单里的院校 */
+  const seen = new Set(), pool = [];
+  DATA.forEach(d => {
+    if(d.region !== editing.region || d.group !== editing.group) return;
+    if(seen.has(d.name)) return;
+    seen.add(d.name);
+    pool.push({ name:d.name, region:d.region, group:d.group });
+  });
+  pool.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans-CN'));
+  if(!kw) return pool;
+  return pool.filter(s => s.name.toLowerCase().includes(kw));
+}
+
+function renderNamePop(){
+  const q = nameState.browsing ? '' : $('#fName').value.trim().toLowerCase();
+  const list = buildNameList(q);
+  nameState.list = list;
+  if(nameState.active > list.length - 1) nameState.active = list.length - 1;
+
+  const pop = $('#namePop');
+  if(!list.length){
+    pop.innerHTML = '<div class="cbx-empty">' +
+      (q ? '该分组下没有匹配的院校' : '该分组下暂无可选院校') + '</div>';
+    return;
+  }
+  pop.innerHTML = list.map((s, i) =>
+    `<div class="cbx-item${i === nameState.active ? ' act' : ''}" data-i="${i}">
+      <span class="n">${markKw(s.name, q)}</span>
+    </div>`
+  ).join('');
+}
+
+function openNamePop(){
+  $('#nameCbx').classList.add('open');
+  nameState.open = true;
+  nameState.browsing = true;
+  nameState.active = -1;
+  renderNamePop();
+  /* 展开时把当前已选院校滚进视野 */
+  const ci = nameState.list.findIndex(s => s.name === editing.name);
+  const cur = ci > -1 ? $('#namePop .cbx-item[data-i="' + ci + '"]') : null;
+  if(cur) requestAnimationFrame(()=>cur.scrollIntoView({ block:'center' }));
+}
+function closeNamePop(){
+  $('#nameCbx').classList.remove('open');
+  nameState.open = false;
+  nameState.active = -1;
+}
+function restoreName(){
+  $('#fName').value = editing.linkId ? editing.name : '';
+}
+function pickSchool(s){
+  editing.name = s.name;
+  editing.linkId = s.name;
+  $('#fName').value = s.name;
+  closeNamePop();
+  $('#fName').blur();
+}
+
+$('#fName').addEventListener('focus', ()=>{
+  if(!nameState.open) openNamePop();
+});
+$('#fName').addEventListener('click', ()=>{
+  /* 输入框已聚焦时再点击不会触发 focus，这里补一次，避免关掉后点不开 */
+  if(!nameState.open) openNamePop();
+});
+$('#fName').addEventListener('input', e=>{
+  /* 手输后原选择失效，必须重新在列表中确认 */
+  editing.linkId = null;
+  editing.name = e.target.value;
+  if(!nameState.open) openNamePop();
+  nameState.browsing = false;
+  nameState.active = -1;
+  renderNamePop();
+});
+$('#fName').addEventListener('keydown', e=>{
+  const list = nameState.list;
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(!nameState.open){ openNamePop(); return; }
+    if(!list.length) return;
+    let i = nameState.active;
+    i = (e.key === 'ArrowDown' ? i + 1 : i - 1 + list.length + 1) % list.length;
+    nameState.active = i;
+    renderNamePop();
+    const el = $('#namePop .act');
+    if(el) el.scrollIntoView({ block:'nearest' });
+  } else if(e.key === 'Enter'){
+    e.preventDefault();
+    const s = nameState.list[nameState.active];
+    if(s && !DATA.find(d => d.name === s.name && d.id !== editingId)) pickSchool(s);
+  } else if(e.key === 'Escape'){
+    closeNamePop(); restoreName(); $('#fName').blur();
+  }
+});
+$('#namePop').addEventListener('click', e=>{
+  const it = e.target.closest('.cbx-item'); if(!it) return;
+  const s = nameState.list[+it.dataset.i];
+  if(s) pickSchool(s);
+});
+
+document.addEventListener('mousedown', e=>{
+  if(!nameState.open) return;
+  if(e.target.closest('#nameCbx')) return;
+  closeNamePop();
+  restoreName();
+});
+
+$('#fSortInput').addEventListener('input', e=>{
+  const v = e.target.value.replace(/[^\d]/g,'');
+  e.target.value = v;
+  const n = parseInt(v, 10);
+  if(n >= 1 && n <= (editing._sortMax || 999)) editing._sortNo = n;
+});
+
+$('#fRegionSel').addEventListener('change', e=>{
+  const nr = e.target.value;
+  if(nr === editing.region) return;
+  editing.region = nr;
+  /* 换榜单后原院校可能不属于该榜单，直接清空重选 */
+  const lib = SCHOOL_LIB.find(s => s.name === editing.name);
+  if(!lib || lib.region !== nr){
+    editing.name = '';
+    editing.linkId = null;
+    $('#fName').value = '';
+    closeNamePop();
+  }
+  editing.group = '';
+  renderGroupSel();
+  updateSortBtn();
+});
+
+$('#fGroupSel').addEventListener('change', e=>{
+  editing.group = e.target.value;
+  /* 分组变了，可选院校名单跟着变 */
+  if(nameState.open) renderNamePop();
+});
+
+$('#stOn').addEventListener('change', ()=>{ editing.status = 1; });
+$('#stOff').addEventListener('change', ()=>{ editing.status = 0; });
+
+$('#fSortBtn').addEventListener('click', function(){
+  openPicker(this, editing._sortMax, editing._sortNo, v=>{
+    editing._sortNo = v;
+    $('#fSortInput').value = v;
+  });
+});
+
+/* 保存 */
+$('#mSave').addEventListener('click', ()=>{
+  if(!editing.group){ toast('请选择分组标签'); $('#fGroupSel').focus(); return; }
+  if(!editing.linkId){
+    toast('请从院校库中选择院校');
+    $('#fName').focus(); openNamePop();
+    return;
+  }
+  /* 院校库全量可选，但一所院校只能归属一个榜单，重复的在保存时拦下 */
+  const dup = DATA.find(d => d.name === editing.name && d.id !== editingId);
+  if(dup){ toast('该院校已在' + REGION_LABEL[dup.region] + '榜单中'); return; }
+
+  const _max = editingId
+    ? Math.max(1, regionPool(editing.region).length)
+    : regionPool(editing.region).length + 1;
+  let _no = parseInt(editing._sortNo, 10) || 1;
+  _no = Math.max(1, Math.min(_no, _max));
+  editing._sortNo = _no;
+
+  if(editingId){
+    const d = DATA.find(x=>x.id===editingId);
+    const oldRegion = d.region;
+    const renamed = d.name !== editing.name;
+    const { _sortNo, _sortMax, linkId, ...clean } = editing;
+    /* 换了院校就重新派生徽章，别沿用旧校的字母与配色 */
+    if(renamed){ clean.init = ''; clean.color = ''; }
+    clean.init = autoInit(clean);
+    clean.color = autoColor(clean);
+    Object.assign(d, clean);
+    if(oldRegion !== d.region){
+      /* 换榜单：移到新榜单末尾 */
+      const others = DATA.filter(x=>x.id!==d.id);
+      DATA = d.region === 'us' ? [d, ...others] : [...others, d];
+    } else {
+      reorder(d.id, _sortNo);
+    }
+    toast('已保存');
+  } else {
+    const { _sortNo, _sortMax, linkId, ...clean } = editing;
+    clean.init = autoInit(clean);
+    clean.color = autoColor(clean);
+    const nd = { id: ++seq, ...clean };
+    DATA.push(nd);
+    reorder(nd.id, _sortNo);
+    toast('已添加');
+  }
+  closeForm();
+  renderAll();
+});
+
+/* 滚轮滚动 */
+let wheelTimer = null;
+$('#wheelList').addEventListener('scroll', ()=>{
+  highlightWheel();
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(()=>{
+    const list = $('#wheelList');
+    list.scrollTo({ top:(pickerState.val-1)*36, behavior:'smooth' });
+  }, 120);
+});
+$('#wheelList').addEventListener('click', e=>{
+  const it = e.target.closest('.it'); if(!it) return;
+  pickerState.val = +it.dataset.i;
+  $('#wheelList').scrollTo({ top:(pickerState.val-1)*36, behavior:'smooth' });
+  highlightWheel();
+});
+$('#pickerOk').addEventListener('click', ()=>{
+  const cb = pickerState.onOk, v = pickerState.val;
+  closePicker();
+  if(cb) cb(v);
+});
+
+/* toast */
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+/* dialog */
+let dlgCb = null;
+function confirmDlg(title, desc, cb){
+  $('#dlgTitle').textContent = title;
+  $('#dlgDesc').textContent = desc;
+  dlgCb = cb;
+  $('#dialog').classList.add('show');
+  $('#mask').classList.add('show');
+}
+$('#dlgNo').addEventListener('click', ()=>{ $('#dialog').classList.remove('show'); $('#mask').classList.remove('show'); });
+$('#dlgYes').addEventListener('click', ()=>{
+  $('#dialog').classList.remove('show'); $('#mask').classList.remove('show');
+  if(dlgCb) dlgCb();
+});
+$('#mask').addEventListener('click', ()=>{ $('#dialog').classList.remove('show'); });
+
+/* 初始化 */
+renderGroupFilter();
+state.region = 'all';
+renderAll();
+</script>
+</body>
+</html>
